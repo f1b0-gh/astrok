@@ -22,15 +22,15 @@
     "test": "npm run build && node --conditions=browser tests/runtime.test.ts && node --conditions=browser tests/hypermedia.test.ts"
   },
   "peerDependencies": {
-    "solid-js": "2.0.0-rc.21",
-    "@solidjs/web": "2.0.0-rc.21"
+    "@solidjs/web": "^2.0.0",
+    "solid-js": "^2.0.0"
   },
   "dependencies": {
     "zod": "4.6.7"
   },
   "optionalDependencies": {
-    "morphdom": "2.7.8",
-    "acorn": "8.19.0"
+    "acorn": "8.19.0",
+    "morphdom": "2.7.8"
   },
   "engines": {
     "node": ">=24"
