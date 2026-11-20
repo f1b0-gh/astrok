@@ -23,6 +23,23 @@ export default defineConfig({
     },
     starlight({
       title: 'astrok',
+      expressiveCode: {
+        plugins: [{
+          name: 'astrok-focusable-code',
+          hooks: {
+            postprocessRenderedBlock: ({ renderData }) => {
+              // Make code keyboard-scrollable before the resize observer runs.
+              function makeFocusable(node) {
+                if (node.type === 'element' && node.tagName === 'pre') {
+                  node.properties.tabIndex = 0;
+                }
+                node.children?.forEach(makeFocusable);
+              }
+              makeFocusable(renderData.blockAst);
+            },
+          },
+        }],
+      },
       favicon: '/astrok-icon.svg',
       description: 'Static knowledge and reactive interfaces for people and agents.',
       logo: { dark: '@astrok/theme/logos/astrok-mark-dark.svg', light: '@astrok/theme/logos/astrok-mark-ink.svg', alt: '', replacesTitle: false },

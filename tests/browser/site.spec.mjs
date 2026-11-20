@@ -23,6 +23,20 @@ test('renders canonical documents, working links and code without YAML metadata'
   expect(overflow).toBe(false);
 });
 
+test('code blocks remain keyboard-focusable on narrow screens', async ({ page, request }) => {
+  // Check the server output too: client-side resize handling must not be required.
+  const html = await (await request.get('/writing-content/')).text();
+  expect(html).toMatch(/<pre\b[^>]*\btabindex="0"/);
+  await page.setViewportSize({ width: 320, height: 720 });
+  await page.goto('/writing-content/');
+  const code = page.locator('.sl-markdown-content pre').first();
+  await expect(code).toHaveAttribute('tabindex', '0');
+  await code.evaluate(element => element.focus());
+  await expect(code).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  await expect(code).toBeFocused();
+});
+
 test('publishes exact raw Markdown and manifest with source paths', async ({ request }) => {
   const manifest = await (await request.get('/okf/manifest.json')).json();
   expect(manifest.documents.map(document => document.id).sort()).toEqual(['index', 'getting-started', 'writing-content', 'solid-rendering', 'using-with-ai'].sort());
