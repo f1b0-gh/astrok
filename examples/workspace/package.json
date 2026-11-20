@@ -15,16 +15,16 @@
     "@astrok/okf": "0.1.0",
     "@astrok/runtime": "0.1.0",
     "astro": "7.4.13",
-    "solid-js": "2.0.0-rc.21",
-    "@solidjs/web": "2.0.0-rc.21",
+    "solid-js": "2.0.0",
+    "@solidjs/web": "2.0.0",
     "zod": "4.6.7",
     "@astrojs/markdown-remark": "7.3.4",
     "@astrok/theme": "0.1.0"
   },
   "devDependencies": {
     "vite": "8.3.8",
-    "@solidjs/vite-plugin": "3.0.0-next.57",
-    "@solidjs/compiler": "2.0.0-rc.21",
+    "@solidjs/vite-plugin": "3.0.1",
+    "@solidjs/compiler": "2.0.0",
     "typescript": "6.0.3"
   },
   "engines": {
