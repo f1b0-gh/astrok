@@ -1,0 +1,22 @@
+---
+import { loadSite } from '@astrok/okf/site';
+import { createMarkdownProcessor } from '@astrojs/markdown-remark';
+import Layout from '../layouts/Layout.astro';
+
+export async function getStaticPaths() {
+  const base = import.meta.env.BASE_URL;
+  // Run example commands from the consumer root; bundled import.meta.url points
+  // into prerender output, not back to the canonical source directory.
+  const { documents } = await loadSite({ root: 'knowledge', base });
+  const markdown = await createMarkdownProcessor();
+  return Promise.all(documents.map(async document => ({
+    params: { slug: decodeURIComponent(document.url.slice(base.length).replace(/\/$/, '')) || undefined },
+    props: { document, html: (await markdown.render(document.body)).code },
+  })));
+}
+const { document, html } = Astro.props;
+---
+<Layout title={document.title}>
+  <article set:html={html} />
+  <p class="source"><a href={document.sourceUrl}>View Markdown</a> · <a href={`${import.meta.env.BASE_URL}okf/manifest.json`}>Agent manifest</a></p>
+</Layout>

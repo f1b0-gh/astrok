@@ -1,0 +1,19 @@
+---
+import DefaultPageTitle from '@astrojs/starlight/components/PageTitle.astro';
+const { entry } = Astro.locals.starlightRoute;
+const okf = entry.data.okf;
+---
+{okf?.hasBodyTitle ? <span id="_top"></span> : <DefaultPageTitle />}
+{okf && (
+  <div class="source-bar">
+    {okf.type && <span class="concept-type">{okf.type}</span>}
+    <a href={okf.sourceUrl}>View Markdown <span aria-hidden="true">↗</span></a>
+    <a href="/okf/manifest.json">Bundle manifest <span aria-hidden="true">↗</span></a>
+    <a href="/llms.txt">Query the index <span aria-hidden="true">↗</span></a>
+  </div>
+)}
+<style>
+  .source-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem 1rem; margin-top: 1rem; font-size: var(--sl-text-sm); }
+  .source-bar a { color: var(--sl-color-text-accent); text-underline-offset: .2em; }
+  .concept-type { border: 1px solid var(--sl-color-gray-5); border-radius: 999px; padding: .15rem .65rem; color: var(--sl-color-gray-2); }
+</style>

@@ -1,0 +1,48 @@
+# Astrok workspace example
+
+The `knowledge/` directory is canonical for this example. Plain Astro renders
+its pages and publishes raw Markdown plus an agent manifest. The workspace uses
+two separate state instances. Within each, HTML controls and a Solid component
+share native Solid state; a synthetic service supplies exact-ID rows, SSE signal
+patches and trusted HTML fragments. The table reveals at most 100 more rows per
+click. This is not a virtualization or production authentication example.
+
+From the repository root, using Node 24:
+
+```sh
+npm ci
+npm run build:packages
+npm run build --workspace @astrok/example-workspace
+npm run preview --workspace @astrok/example-workspace
+```
+
+The synthetic preview binds loopback port 4338. Open `/workspace/` for shared controls, or `/solid/` for native SSR and hydration; documentation
+and source downloads also work when JavaScript is disabled. The streaming service
+is part of `fixture.mjs`, not the framework. Main and alternate workspace routes
+use Astro client navigation; Home and Guide remain static documentation.
+
+For development, `npm run dev --workspace @astrok/example-workspace` watches the
+independent Solid build and runs Astro on loopback port 4341. It is a frontend
+development server; use the fixture preview to exercise the synthetic data API.
+Compiled-entry edits reload the development interface; persistent hot-edit state
+is not promised. Production navigation explicitly disposes the previous workspace.
+
+To exercise a deployment prefix, set `ASTROK_BASE=/portal/` for both build and
+preview. Service URLs and raw/source links use that base. Astro owns the final
+hashed assets: the intermediate `.client/` directory contains externalized ESM
+for Astro to bundle, and is not a standalone browser distribution.
+
+The native `/solid/` example imports `.tsx` directly into Astro and exercises
+its client directives. `/solid-static/` renders the same component without
+JavaScript. The older workspace keeps its separate compilation path to test
+shared state and hypermedia ownership.
+
+The optional expression layer deliberately uses trusted, application-authored
+attributes and requires CSP `unsafe-eval`. Do not interpolate untrusted content
+into executable attributes. Core Solid/state/SSE usage does not require the
+expression entry point. Application authorization, private caches and session
+state belong in the consuming application, outside public OKF artifacts.
+
+See [Building and testing](../../BUILDING.md) for package-consumer verification
+and browser prerequisites. Dependency versions are recorded in `package-lock.json`
+at the repository root.

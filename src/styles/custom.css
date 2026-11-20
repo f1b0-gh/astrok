@@ -1,0 +1,4 @@
+@import '@astrok/theme/fonts.css';
+@import '@astrok/theme/starlight.css';
+
+:root { --sl-content-width: 48rem; }

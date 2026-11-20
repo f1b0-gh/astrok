@@ -1,0 +1,10 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Counter from '../components/Counter';
+const base = import.meta.env.BASE_URL;
+---
+<Layout title="Static Solid rendering">
+  <h1>Static Solid rendering</h1>
+  <Counter name={'safe <text> & "quotes"'} initial={23}><p>Rendered without a client directive.</p></Counter>
+  <a href={`${base}solid/`}>Hydrated Solid page</a>
+</Layout>

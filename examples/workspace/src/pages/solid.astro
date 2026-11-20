@@ -1,0 +1,18 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Counter from '../components/Counter';
+import { ClientRouter } from 'astro:transitions';
+const base = import.meta.env.BASE_URL;
+---
+<Layout title="Native Solid rendering">
+  <ClientRouter />
+  <h1>Native Solid rendering</h1>
+  <p>These counters arrive as server-rendered HTML. Astro hydrates each island when its directive runs.</p>
+  <Counter name="first" initial={2} client:load><em slot="title">First counter</em><p>Default slot from Astro.</p></Counter>
+  <Counter name="second" initial={7} client:idle />
+  <Counter name="visible" initial={11} client:visible />
+  <Counter name="media" initial={13} client:media="(min-width: 1px)" />
+  <Counter name="browser" initial={17} client:only="@astrok/solid"><p slot="fallback">Loading browser counter…</p></Counter>
+  <p><a href={`${base}workspace/`}>Interactive workspace</a></p>
+  <p><a href={`${base}solid-static/`}>Static Solid page</a></p>
+</Layout>

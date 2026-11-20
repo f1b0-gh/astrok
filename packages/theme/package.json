@@ -1,0 +1,25 @@
+{
+  "name": "@astrok/theme",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Shared astrok design tokens, typography, Starlight adapter and logos",
+  "license": "MIT OR Apache-2.0",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE*"
+  ],
+  "exports": {
+    "./tokens.css": "./dist/tokens.css",
+    "./fonts.css": "./dist/fonts.css",
+    "./starlight.css": "./dist/starlight.css",
+    "./tokens.json": "./dist/tokens.json",
+    "./logos/*.svg": "./dist/logos/*.svg"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  },
+  "engines": {
+    "node": ">=24 <25"
+  }
+}

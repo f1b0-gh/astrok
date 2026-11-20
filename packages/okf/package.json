@@ -1,0 +1,48 @@
+{
+  "name": "@astrok/okf",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Canonical OKF parsing, static publication and optional knowledge graph",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE*"
+  ],
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    },
+    "./site": {
+      "types": "./dist/site/generate.d.mts",
+      "import": "./dist/site/generate.mjs"
+    },
+    "./graph": {
+      "types": "./dist/graph/index.d.ts",
+      "import": "./dist/graph/index.js"
+    },
+    "./sqlite": {
+      "types": "./dist/graph/sqlite.d.ts",
+      "import": "./dist/graph/sqlite.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.contracts.json && node scripts/declarations.mjs",
+    "check": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.contracts.json"
+  },
+  "dependencies": {
+    "github-slugger": "2.0.0",
+    "remark-gfm": "4.0.1",
+    "remark-parse": "11.0.0",
+    "remark-stringify": "11.0.0",
+    "unified": "11.0.5",
+    "yaml": "2.9.1"
+  },
+  "optionalDependencies": {
+    "@sqlite.org/sqlite-wasm": "3.54.1-build1"
+  },
+  "license": "MIT OR Apache-2.0"
+}

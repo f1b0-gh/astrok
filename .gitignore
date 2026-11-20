@@ -1,0 +1,38 @@
+node_modules/
+dist/
+.astro/
+*.sqlite
+*.sqlite3
+*.db
+.DS_Store
+.env
+
+# Generated from knowledge/; never edit these copies.
+src/content/docs/
+.generated/
+playwright-report/
+test-results/
+test-results-astrok/
+
+# Rebuildable Astrok package/example outputs.
+.client/
+artifacts/
+
+# Local reports, publication metadata and credentials.
+harness/
+/.jj/
+/.codex/
+/.superpowers/
+/docs/superpowers/
+*.log
+.env.*
+!.env.example
+
+# Build/cache outputs at any depth, including future packages and examples.
+build/
+out/
+target/
+coverage/
+.cache/
+.vite/
+*.tsbuildinfo
