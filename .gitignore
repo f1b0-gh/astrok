@@ -36,3 +36,6 @@ coverage/
 .cache/
 .vite/
 *.tsbuildinfo
+
+# Static Pages browser checks.
+test-results-pages/

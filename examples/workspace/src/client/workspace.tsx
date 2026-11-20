@@ -20,7 +20,7 @@ export function dispose() {
   for (const cleanup of cleanups.splice(0).reverse()) cleanup();
 }
 
-function Panel(props: { shared: Shared; service: string; name: string; hypermedia: ReturnType<typeof createHypermedia> }) {
+function Panel(props: { shared: Shared; service: string; name: string; staticDemo: boolean; hypermedia: ReturnType<typeof createHypermedia> }) {
   const [result, setResult] = createSignal<RequestState<Rows>>({ status: 'idle' });
   const [error, setError] = createSignal('');
   const [limit, setLimit] = createSignal(100);
@@ -57,9 +57,9 @@ function Panel(props: { shared: Shared; service: string; name: string; hypermedi
   return <>
     <div class="actions">
       <button type="button" onClick={() => props.shared.update(draft => { draft.selected = draft.selected === 'alpha' ? 'beta' : 'alpha'; })}>Toggle selection</button>
-      <button type="button" onClick={() => { setError(''); void request.run({ selected: props.shared.state.selected, fail: false }); }}>Load rows</button>
-      <button type="button" onClick={() => void streamSummary()}>Stream summary</button>
-      <button type="button" onClick={() => { setError(''); void request.run({ selected: props.shared.state.selected, fail: true }); }}>Request failure</button>
+      <button type="button" disabled={props.staticDemo} onClick={() => { setError(''); void request.run({ selected: props.shared.state.selected, fail: false }); }}>Load rows</button>
+      <button type="button" disabled={props.staticDemo} onClick={() => void streamSummary()}>Stream summary</button>
+      <button type="button" disabled={props.staticDemo} onClick={() => { setError(''); void request.run({ selected: props.shared.state.selected, fail: true }); }}>Request failure</button>
       <button type="button" onClick={protectedPatch}>Try protected patch</button>
     </div>
     <Show when={message()}><p role="alert">{message()}</p></Show>
@@ -85,6 +85,7 @@ export async function initialize() {
   for (const element of document.querySelectorAll<HTMLElement>('[data-workspace]')) {
     const name = element.dataset.workspace!;
     const service = element.dataset.service!;
+    const staticDemo = element.dataset.staticDemo === 'true';
     const root = element.querySelector<HTMLElement>('[data-hypermedia]')!;
     const solid = element.querySelector<HTMLElement>('[data-solid]')!;
     const shared = createSharedState<State>({ selected: 'alpha', summary: 'Preparing…', clicks: 0, note: '' }, stateSchema.parse);
@@ -95,10 +96,11 @@ export async function initialize() {
       headers: { 'content-type': 'text/event-stream' },
     }), controller.signal, { signals: (patch, missing) => shared.patch(patch, missing) });
     if (current !== generation) return;
+    if (staticDemo) shared.patch({ summary: 'Local state demo' });
     const hypermedia = createHypermedia(shared, { allowedPaths: [service], protectedRoots: [solid] });
     hypermedia.mount(root);
     solid.replaceChildren();
-    const unmount = render(() => <Panel shared={shared} service={service} name={name} hypermedia={hypermedia} />, solid);
+    const unmount = render(() => <Panel shared={shared} service={service} name={name} staticDemo={staticDemo} hypermedia={hypermedia} />, solid);
     cleanups.push(() => { hypermedia.dispose(); unmount(); });
   }
 }

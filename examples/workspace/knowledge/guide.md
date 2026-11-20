@@ -18,6 +18,13 @@ checkout, `npm run build` and `npm run preview` start the complete example at
 `http://127.0.0.1:4338/workspace/`. The development server on port 4341 runs the
 frontend only. This guide remains readable without either service.
 
+## Hosted sample
+
+On GitHub Pages, selection, click counts and Solid counters work in the browser.
+**Load rows**, **Stream summary** and **Request failure** are disabled because
+they need the local example service. Use the preview command above to try them.
+The **Solid components** and **Design system** navigation links work on either host.
+
 ## Try it
 
 **First workspace** and **Second workspace** have separate state. In the first:

@@ -4,6 +4,7 @@ import { okfIntegration } from '@astrok/astro';
 
 export default defineConfig({
   output: 'static',
+  site: process.env.ASTROK_SITE,
   base: process.env.ASTROK_BASE || '/',
   trailingSlash: 'always',
   publicDir: '.generated/public',

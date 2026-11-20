@@ -46,3 +46,22 @@ state belong in the consuming application, outside public OKF artifacts.
 See [Building and testing](../../BUILDING.md) for package-consumer verification
 and browser prerequisites. Dependency versions are recorded in `package-lock.json`
 at the repository root.
+
+## GitHub Pages
+
+The sample is deployed at <https://f1b0-gh.github.io/astrok/>. CI builds and tests
+both the complete local example and a static-hosting version before deployment.
+The static version supports shared controls, native Solid counters and the design
+system. Rows and streaming need the local preview server; those buttons are
+disabled on Pages.
+
+To reproduce the static build from the repository root:
+
+```sh
+ASTROK_BASE=/astrok/ ASTROK_SITE=https://f1b0-gh.github.io ASTROK_STATIC_DEMO=1 npm run build
+ASTROK_BASE=/astrok/ npm run test:pages
+```
+
+The workflow gets the origin and prefix from GitHub Pages settings. A custom
+domain can be configured later and picked up on the next deployment. Only
+`examples/workspace/dist/` is uploaded; generated files are not committed.
