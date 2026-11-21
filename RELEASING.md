@@ -1,8 +1,8 @@
 # Releasing Astrok
 
-Packages are currently consumed from this repository or local tarballs. A version in package.json
-does not mean that version has been published. Release work is a reviewed maintainer action; CI
-verifies PRs and deploys the demo, but does not publish npm packages.
+The first prerelease, `0.1.0-beta.1`, is available on npm under the `next` tag. A version in
+package.json alone does not mean it has been published. Release work remains a reviewed maintainer
+action; CI verifies PRs and deploys the demo, but does not publish npm packages.
 
 The npm organization is `astrokjs`; public packages use the `@astrokjs` scope. The project and
 GitHub repository remain named Astrok. The root and example workspaces are private and must not be
@@ -36,11 +36,18 @@ published.
    (`npm view @astrokjs/okf versions --json`, and likewise for each package). Preview each exact
    archive with `npm publish --dry-run artifacts/release/<file>.tgz`. A maintainer must review the
    results and approve publication before proceeding.
-5. After approval and authenticated npm access, publish the inspected archives with
+5. After approval and authenticated npm access with 2FA, publish the inspected archives with
    `npm publish artifacts/release/<file>.tgz --access public --tag <tag>`. Publish `okf`, `theme`,
    and `runtime` before `astro`, which depends on `okf`. Use `next` for prereleases and `latest` for
-   a stable release. Published versions are immutable: if a partial release fails, inspect registry
-   state and retry only missing packages; do not overwrite or unpublish automatically.
+   a stable release. On the first publication, npm also assigns `latest`, even with `--tag next`,
+   and rejects removal of that tag. Keep first-release beta status explicit in the documentation;
+   see [npm's first-publication behavior](https://github.com/npm/cli/issues/8490). Published
+   versions are immutable: if a partial release fails, inspect registry state and retry only failed
+   submissions; do not overwrite or unpublish automatically. A successful publish can remain
+   unavailable while npm scans it, typically for several minutes. Wait for the exact version and
+   intended tag to appear in registry lookups before installing; a temporary 404 after an accepted
+   publish is not a reason to publish it again. See
+   [npm publish-time scanning](https://github.blog/changelog/2026-07-28-npm-publish-time-malware-scanning-and-dual-use-metadata/).
 6. Verify registry installs of the published versions in a fresh consumer, including the workspace
    build and browser checks. Create the version tag and GitHub release on the verified commit, using
    the changelog and linking known limitations. Replace checkout-only installation guidance only
