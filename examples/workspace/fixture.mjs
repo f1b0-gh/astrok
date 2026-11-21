@@ -29,7 +29,7 @@ const server = createServer(async (request, response) => {
     response.writeHead(200, { 'Content-Type': 'text/event-stream' });
     response.write('event: datastar-patch-signals\ndata: signals {"summary":"Streaming…"}\n\n');
     const timer = setTimeout(() => {
-      response.write(`event: datastar-patch-elements\ndata: selector #fragment-${region}\ndata: mode inner\ndata: elements <label>Fragment note<input id="note-${region}" data-bind="note" value="Server default" /></label><p data-fragment-message>Server fragment updated</p>\n\n`);
+      response.write(`event: datastar-patch-elements\ndata: selector #fragment-${region}\ndata: mode inner\ndata: elements <label>Panel note<input id="note-${region}" data-bind="note" value="Server default" /></label><p data-fragment-message>Server fragment updated</p>\n\n`);
       response.end('event: datastar-patch-signals\ndata: signals {"summary":"Stream complete"}\n\n');
     }, 40);
     response.once('close', () => clearTimeout(timer));

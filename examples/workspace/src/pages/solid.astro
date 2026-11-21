@@ -7,12 +7,12 @@ const base = import.meta.env.BASE_URL;
 <Layout title="Native Solid rendering">
   <ClientRouter />
   <h1>Native Solid rendering</h1>
-  <p>These counters arrive as server-rendered HTML. Astro hydrates each island when its directive runs.</p>
-  <Counter name="first" initial={2} client:load><em slot="title">First counter</em><p>Default slot from Astro.</p></Counter>
-  <Counter name="second" initial={7} client:idle />
-  <Counter name="visible" initial={11} client:visible />
-  <Counter name="media" initial={13} client:media="(min-width: 1px)" />
-  <Counter name="browser" initial={17} client:only="@astrok/solid"><p slot="fallback">Loading browser counter…</p></Counter>
+  <p>One Solid component, five ways to load it. Each counter starts at zero and keeps its own count. Most arrive as HTML before their JavaScript loads.</p>
+  <Counter name="first" initial={0} client:load><span slot="title">On page load</span><p><code>client:load</code> makes this counter interactive as soon as the page loads.</p></Counter>
+  <Counter name="second" initial={0} client:idle><span slot="title">When the browser is idle</span><p><code>client:idle</code> waits until the browser has time after loading the page.</p></Counter>
+  <Counter name="visible" initial={0} client:visible><span slot="title">When it becomes visible</span><p><code>client:visible</code> loads this counter when it enters the viewport. Scroll down to try it.</p></Counter>
+  <Counter name="media" initial={0} client:media="(min-width: 768px)"><span slot="title">On wider screens</span><p><code>client:media</code> activates at a viewport width of at least 768 pixels. On smaller screens you see the initial HTML; widen the window to interact.</p></Counter>
+  <Counter name="browser" initial={0} client:only="@astrok/solid"><span slot="title">In the browser only</span><p><code>client:only</code> skips server rendering and creates this counter in the browser.</p><p slot="fallback">Loading browser counter…</p></Counter>
   <p><a href={`${base}workspace/`}>Interactive workspace</a></p>
   <p><a href={`${base}solid-static/`}>Static Solid page</a></p>
 </Layout>

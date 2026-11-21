@@ -59,14 +59,14 @@ test('disposal, remount and morph boundaries retain one live owner', async ({ pa
   await expect(first.locator('[data-selected]')).toHaveText('alpha');
   await first.getByRole('button', { name: 'Count click' }).click();
   await expect(first.locator('[data-clicks]')).toHaveText('1');
-  await first.getByRole('button', { name: 'Try protected patch' }).click();
+  await first.getByRole('button', { name: 'Test update protection' }).click();
   await expect(first.getByRole('alert')).toContainText('protected');
   await expect(first.getByRole('button', { name: 'Load rows' })).toBeVisible();
-  await first.getByLabel('Fragment note').fill('Keep my draft');
+  await first.getByLabel('Panel note').fill('Keep my draft');
   await first.getByRole('button', { name: 'Stream summary' }).evaluate(button => { if (button instanceof HTMLButtonElement) button.click(); });
   await expect(first.locator('[data-fragment-message]')).toHaveText('Server fragment updated');
-  await expect(first.getByLabel('Fragment note')).toBeFocused();
-  await expect(first.getByLabel('Fragment note')).toHaveValue('Keep my draft');
+  await expect(first.getByLabel('Panel note')).toBeFocused();
+  await expect(first.getByLabel('Panel note')).toHaveValue('Keep my draft');
   const token = await page.evaluate(() => {
     const value = crypto.randomUUID();
     Reflect.set(window, '__astrokNavigationTest', value);
@@ -80,7 +80,8 @@ test('disposal, remount and morph boundaries retain one live owner', async ({ pa
   await expect(first.locator('[data-clicks]')).toHaveText('1');
   await page.getByRole('link', { name: 'astrok home', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Astrok', exact: true })).toBeVisible();
-  await page.getByRole('link', { name: 'Open workspace' }).click();
+  await page.getByRole('navigation', {name: 'Main'}).getByText('Demos', {exact: true}).click();
+  await page.getByRole('link', { name: 'Workspace', exact: true }).click();
   await expect(first.locator('[data-clicks]')).toHaveText('0');
 });
 
@@ -106,7 +107,8 @@ test('static reading loads no scripts and data requests stay on demand', async (
   await page.goto(base);
   await expect(page.getByRole('heading', { name: 'Astrok', exact: true })).toBeVisible();
   expect(scripts).toHaveLength(0);
-  await page.getByRole('link', { name: 'Open workspace' }).click();
+  await page.getByRole('navigation', {name: 'Main'}).getByText('Demos', {exact: true}).click();
+  await page.getByRole('link', { name: 'Workspace', exact: true }).click();
   await expect(page.locator('[data-workspace="first"] [data-summary]')).toHaveText('Before mount');
   expect(api).toHaveLength(0);
   const sizes = await Promise.all(bodies);

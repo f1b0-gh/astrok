@@ -57,6 +57,7 @@ try {
   await page.waitForFunction(() => document.querySelector('[data-workspace="first"] [data-clicks]')?.textContent === '1');
   await page.goto(`${origin}/solid/`);
   await page.locator('[data-counter="first"] button').waitFor();
+  await page.locator('astro-island[client="visible"]').scrollIntoViewIfNeeded();
   await page.waitForFunction(() => document.querySelectorAll('astro-island[ssr]').length === 0);
   const nativeEdited = nativeOriginal.replace('Count {props.name}', 'Updated {props.name}');
   assert.notEqual(nativeEdited, nativeOriginal);

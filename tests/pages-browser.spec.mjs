@@ -11,6 +11,8 @@ test('static workspace keeps local interactions and does not call unavailable se
   const second = page.locator('[data-workspace="second"]');
   for (const panel of [first, second]) {
     for (const name of ['Load rows', 'Stream summary', 'Request failure']) await expect(panel.getByRole('button', { name, exact: true })).toBeDisabled();
+    await expect(panel.locator('[data-service-notice]')).toContainText('need the local preview server');
+    await expect(panel.getByRole('status')).toContainText('Try changing the selection or counting clicks');
   }
   await first.getByRole('button', { name: 'Count click', exact: true }).click();
   await expect(first.locator('[data-clicks]')).toHaveText('1');
@@ -31,6 +33,7 @@ test('static workspace keeps local interactions and does not call unavailable se
 
 test('Pages navigation and source downloads respect the repository prefix', async ({ page, request }) => {
   await page.goto(base);
+  await page.getByRole('navigation', {name: 'Main'}).getByText('Demos', {exact: true}).click();
   await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Solid components', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`${base}solid/$`));
   const manifest = await (await request.get(`${base}okf/manifest.json`)).json();
@@ -53,6 +56,10 @@ test('homepage explains Astrok and publishes copyable agent discovery without Ja
     const manifest = await (await request.get(`${base}okf/manifest.json`)).json();
     await expect(page.locator('main')).toContainText(`${manifest.documents.length} Markdown files`);
     await expect(page.locator('script')).toHaveCount(0);
+    await expect(page.getByRole('navigation', {name: 'Main'}).getByRole('link', {name: 'GitHub'})).toBeVisible();
+    await page.getByText('Demos', {exact: true}).click();
+    await expect(page.getByRole('link', {name: 'Workspace', exact: true})).toBeVisible();
+    await page.getByText('Demos', {exact: true}).click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({path: testInfo.outputPath('homepage.png'), fullPage: true});
     await page.goto(`${baseURL}${base}agents/`);

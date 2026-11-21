@@ -8,7 +8,7 @@ for (const theme of ['dark', 'light']) {
     const pageErrors = [];
     page.on('pageerror', error => pageErrors.push(error.message));
     await page.goto(`${base}design-system/${theme === 'light' ? 'light/' : ''}`);
-    await expect(page.getByRole('heading', { name: 'astrok, sous tension.' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Astrok, ready to respond.' })).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
     await page.evaluate(() => document.fonts.ready);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

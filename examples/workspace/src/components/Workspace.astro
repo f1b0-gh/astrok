@@ -22,7 +22,7 @@ const { alternate = false } = Astro.props;
         <button type="button" data-on:click="increment">Count click</button>
         <p>Selected: <strong data-selected data-text="selected">alpha</strong> · Clicks: <span data-clicks data-text="clicks">0</span></p>
         <p>Summary: <span data-summary data-text="summary">Preparing…</span></p>
-        <div id={`fragment-${name}`}><label>Fragment note<input id={`note-${name}`} data-bind="note" value="" /></label><p data-fragment-message>{staticDemo ? 'Local state demo' : 'Waiting for server fragment'}</p></div>
+        <div id={`fragment-${name}`}><label>Panel note<input id={`note-${name}`} data-bind="note" value="" /></label><p data-fragment-message>{staticDemo ? 'Your note stays in this panel.' : 'Waiting for server fragment'}</p></div>
       </div>
       <div data-solid id={`solid-${name}`}><p>Loading interactive controls…</p></div>
     </section>)}

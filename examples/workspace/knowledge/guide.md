@@ -10,8 +10,7 @@ future:
 # Workspace guide
 
 The workspace combines a static Astro page, HTML controls, a Solid table and a
-small example service. Alpha and Beta are made-up datasets. Choose **Open
-workspace** in the navigation to try it.
+small example service. Alpha and Beta are made-up datasets. Choose **Demos → Workspace** in the navigation to try it.
 
 The interactive panels need JavaScript and the example service. With a repository
 checkout, `npm run build` and `npm run preview` start the complete example at
@@ -37,7 +36,7 @@ The **Solid components** and **Design system** navigation links work on either h
    again to fetch that dataset; changing selection alone does not fetch rows.
 4. Press **Count click**. Only this panel's count increases.
 5. Press **Stream summary**. The summary ends at **Stream complete**, and the
-   message below **Fragment note** becomes **Server fragment updated**.
+   message below **Panel note** becomes **Server fragment updated**.
 
 **Before mount**, the initial summary, demonstrates an update received before
 the controls were ready. It is not an error.
@@ -46,7 +45,7 @@ the controls were ready. It is not an error.
 
 - **Request failure** asks the service for a `503` response. **Load rows** makes
   a normal request afterward.
-- **Try protected patch** attempts to replace Solid's controls with server HTML.
+- **Test update protection** attempts to replace Solid's controls with server HTML.
   A rejection message is expected; the controls stay usable.
 - **Remount workspaces** resets both panels. **Alternate workspace** starts a
   fresh instance. Counts, notes and results are not saved across navigation.

@@ -55,18 +55,19 @@ function Panel(props: { shared: Shared; service: string; name: string; staticDem
   }
   function protectedPatch() {
     try { props.hypermedia.applyElements({ selector: `#solid-${props.name}`, mode: 'inner', elements: '<p>Invalid replacement</p>' }); }
-    catch (cause) { setError(`Rejected protected patch: ${cause instanceof Error ? cause.message : String(cause)}`); }
+    catch (cause) { setError(`Update blocked: interactive controls are protected. ${cause instanceof Error ? cause.message : String(cause)}`); }
   }
   return <>
+    <Show when={props.staticDemo}><p data-service-notice id={`${props.name}-service-notice`}>Rows, streaming and failure examples need the local preview server. Run <code>npm run build &amp;&amp; npm run preview</code> in the checkout to try them.</p></Show>
     <div class="actions">
       <button type="button" onClick={() => props.shared.update(draft => { draft.selected = draft.selected === 'alpha' ? 'beta' : 'alpha'; })}>Toggle selection</button>
-      <button type="button" disabled={props.staticDemo} onClick={() => { setError(''); void request.run({ selected: props.shared.state.selected, fail: false }); }}>Load rows</button>
-      <button type="button" disabled={props.staticDemo} onClick={() => void streamSummary()}>Stream summary</button>
-      <button type="button" disabled={props.staticDemo} onClick={() => { setError(''); void request.run({ selected: props.shared.state.selected, fail: true }); }}>Request failure</button>
-      <button type="button" onClick={protectedPatch}>Try protected patch</button>
+      <button type="button" disabled={props.staticDemo} aria-describedby={props.staticDemo ? `${props.name}-service-notice` : undefined} onClick={() => { setError(''); void request.run({ selected: props.shared.state.selected, fail: false }); }}>Load rows</button>
+      <button type="button" disabled={props.staticDemo} aria-describedby={props.staticDemo ? `${props.name}-service-notice` : undefined} onClick={() => void streamSummary()}>Stream summary</button>
+      <button type="button" disabled={props.staticDemo} aria-describedby={props.staticDemo ? `${props.name}-service-notice` : undefined} onClick={() => { setError(''); void request.run({ selected: props.shared.state.selected, fail: true }); }}>Request failure</button>
+      <button type="button" onClick={protectedPatch}>Test update protection</button>
     </div>
     <Show when={message()}><p role="alert">{message()}</p></Show>
-    <p role="status">{result().status === 'pending' ? 'Loading rows…' : data() ? `${data()!.rows.length} matching rows · ${Math.min(limit(), data()!.rows.length)} shown` : 'Choose a selection and load rows.'}</p>
+    <p role="status">{result().status === 'pending' ? 'Loading rows…' : data() ? `${data()!.rows.length} matching rows · ${Math.min(limit(), data()!.rows.length)} shown` : props.staticDemo ? 'Try changing the selection or counting clicks; each panel keeps its own state.' : 'Choose a selection and load rows.'}</p>
     <Show when={data()}>{value => <>
       <div class="table-scroll" tabindex="0" role="region" aria-label={`${props.name} results`}>
         <table><thead><tr><th scope="col">Exact ID</th><th scope="col">Item</th></tr></thead>
@@ -99,7 +100,7 @@ export async function initialize() {
       headers: { 'content-type': 'text/event-stream' },
     }), controller.signal, { signals: (patch, missing) => shared.patch(patch, missing) });
     if (current !== generation) return;
-    if (staticDemo) shared.patch({ summary: 'Local state demo' });
+    if (staticDemo) shared.patch({ summary: 'Ready for local interactions' });
     const hypermedia = createHypermedia(shared, {
       allowedPaths: [service], protectedRoots: [solid],
       handlers: {
