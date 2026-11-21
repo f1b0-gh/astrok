@@ -15,6 +15,11 @@ Each site owns its Markdown bundle. `knowledge/` contains the Astrok user guide;
 pages, raw Markdown, a discovery manifest and, when enabled, JSON/SQLite graphs.
 Generated files are disposable; edits belong in the source bundle.
 
+Site publication supports `strictLinks: true` to reject resolved-link diagnostics
+before touching generated output. The low-level site helpers default to warnings;
+strictness is a publishing policy, not a change to OKF conformance. Unrelated
+metadata warnings remain advisory, and external URLs are not fetched.
+
 Astro builds Solid components for the server and browser. Components render to
 HTML on the server; `client:*` directives opt into browser hydration. The
 workspace's hypermedia demo uses a separate Solid client build. Both paths are

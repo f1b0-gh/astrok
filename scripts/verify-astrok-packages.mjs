@@ -72,6 +72,11 @@ try {
   await run('npm', ['run', 'build'], consumer);
   await writeFile(path.join(consumer, 'contracts.ts'), `import {parseSource, readMetadata} from '@astrok/okf';
 import {okfIntegration} from '@astrok/astro';
+import {loadSite, generateSite} from '@astrok/okf/site';
+const strictSite = loadSite({root: 'knowledge', strictLinks: true});
+const warningSite = generateSite({root: 'knowledge', strictLinks: false});
+// @ts-expect-error strictLinks accepts booleans only.
+loadSite({strictLinks: 'true'});
 import {createFieldState, createSharedState, type ElementPatch, type SharedState, type RequestState} from '@astrok/runtime';
 import {createHypermedia, type HypermediaHandler} from '@astrok/runtime/hypermedia';
 // @ts-expect-error Executable attribute compilation is no longer a public API.

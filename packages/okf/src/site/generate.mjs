@@ -45,10 +45,18 @@ async function syncFiles(directory, files) {
 }
 
 /** @param {import('../types.js').SiteOptions} [options] @returns {Promise<import('../types.js').LoadedSite>} */
-export async function loadSite({ root = 'knowledge', base = '/' } = {}) {
+export async function loadSite({ root = 'knowledge', base = '/', strictLinks = false } = {}) {
+  if (typeof strictLinks !== 'boolean') throw new Error('strictLinks must be a boolean');
   base = normalizeBase(base);
   const bundle = await readBundle(root);
   if (bundle.errors.length) throw new Error(bundle.errors.join('\n'));
+  if (strictLinks) {
+    // Link diagnostics are publication policy, not minimum OKF conformance.
+    const errors = bundle.documents.flatMap(document => document.links
+      .filter(link => link.warning)
+      .map(link => `${document.path}${link.line === undefined ? '' : `:${link.line}`}: ${link.warning}`));
+    if (errors.length) throw new Error(`Invalid internal links (${errors.length}):\n${errors.join('\n')}`);
+  }
   const routes = new Map();
   for (const document of bundle.documents) {
     const url = pageUrl(document.path);
@@ -104,9 +112,9 @@ export async function loadSite({ root = 'knowledge', base = '/' } = {}) {
 }
 
 /** @param {import('../types.js').GenerateOptions} [options] @returns {Promise<import('../types.js').Bundle>} */
-export async function generateSite({ root = 'knowledge', docsDir = 'src/content/docs', publicDir = '.generated/public', base = '/', presentation = 'starlight' } = {}) {
+export async function generateSite({ root = 'knowledge', docsDir = 'src/content/docs', publicDir = '.generated/public', base = '/', presentation = 'starlight', strictLinks = false } = {}) {
   if (presentation !== 'plain' && presentation !== 'starlight') throw new Error('Unknown presentation');
-  const site = await loadSite({ root, base });
+  const site = await loadSite({ root, base, strictLinks });
   // Check every output before claiming or replacing either directory.
   const outputs = presentation === 'plain' ? [path.join(publicDir, 'okf')] : [docsDir, path.join(publicDir, 'okf')];
   await assertDisjointDirectories(outputs);

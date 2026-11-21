@@ -97,3 +97,47 @@ test('regeneration supports replacing an asset directory with a file and back', 
   await generateSite(options);
   assert.equal(await readFile(path.join(options.publicDir, 'okf/assets/new.svg'), 'utf8'), '<svg/>');
 });
+
+test('strict site publication rejects link diagnostics before changing outputs', async t => {
+  const { loadSite } = await import('@astrok/okf/site');
+  for (const presentation of ['plain', 'starlight']) {
+    const options = await fixture(t, { 'topic.md': source('# Topic\n[valid](#topic)\n') });
+    options.presentation = presentation;
+    await generateSite({ ...options, strictLinks: true });
+    const rawFile = path.join(options.publicDir, 'okf/topic.md');
+    const manifestFile = path.join(options.publicDir, 'okf/manifest.json');
+    const raw = await readFile(rawFile, 'utf8');
+    const manifest = await readFile(manifestFile, 'utf8');
+    const page = presentation === 'starlight' ? await readFile(path.join(options.docsDir, 'topic.md'), 'utf8') : null;
+    await writeFile(path.join(options.root, 'topic.md'), source('# Topic\n[missing](missing.md)\n[heading](#gone)\n[escape](../secret.md)\n[bad](%ZZ.md)\n![asset](missing.svg)\n'));
+    await assert.rejects(loadSite({root: options.root, strictLinks: true}), error =>
+      /Invalid internal links/.test(error.message) && /topic.md:5: missing target missing.md/.test(error.message) &&
+      /missing heading #gone/.test(error.message) && /escapes the bundle/.test(error.message) &&
+      /invalid URL encoding/.test(error.message) && /missing target missing.svg/.test(error.message));
+    await assert.rejects(generateSite({...options, strictLinks: true}), /Invalid internal links/);
+    assert.equal(await readFile(rawFile, 'utf8'), raw);
+    assert.equal(await readFile(manifestFile, 'utf8'), manifest);
+    if (page !== null) assert.equal(await readFile(path.join(options.docsDir, 'topic.md'), 'utf8'), page);
+    const fresh = path.join(path.dirname(options.publicDir), 'fresh');
+    await assert.rejects(generateSite({...options, docsDir: path.join(fresh, 'docs'), publicDir: path.join(fresh, 'public'), strictLinks: true}), /Invalid internal links/);
+    await assert.rejects(access(fresh), /ENOENT/);
+  }
+});
+
+test('strict site publication preserves ordinary warnings and low-level warning-only mode', async t => {
+  const { loadSite } = await import('@astrok/okf/site');
+  const options = await fixture(t, {
+    'topic.md': source('# Topic\n[valid](#topic)\n[external](https://unreachable.example.invalid/)\n', 'custom: {kept: true}\n'),
+    'untyped.md': '# Skipped\n',
+  });
+  const site = await loadSite({...options, strictLinks: true});
+  assert.ok(site.bundle.warnings.some(warning => warning.includes('untyped.md')));
+  assert.equal(site.documents[0].metadata.custom.kept, true);
+  await generateSite({...options, strictLinks: true});
+  await writeFile(path.join(options.root, 'topic.md'), source('[missing](missing.md)'));
+  for (const strict of [{}, {strictLinks: false}]) {
+    const bundle = await generateSite({...options, ...strict});
+    assert.ok(bundle.warnings.some(warning => warning.includes('missing target')));
+  }
+  await assert.rejects(loadSite({...options, strictLinks: 'false'}), /strictLinks/);
+});
