@@ -1,6 +1,6 @@
 {
   "name": "astrok",
-  "version": "0.1.0",
+  "version": "0.1.0-beta.1",
   "private": true,
   "type": "module",
   "description": "Astro, Solid 2 and OKF framework with optional trusted hypermedia",
@@ -35,9 +35,9 @@
   },
   "dependencies": {
     "@astrojs/starlight": "0.43.1",
-    "@astrokjs/astro": "0.1.0",
-    "@astrokjs/okf": "0.1.0",
-    "@astrokjs/theme": "0.1.0",
+    "@astrokjs/astro": "0.1.0-beta.1",
+    "@astrokjs/okf": "0.1.0-beta.1",
+    "@astrokjs/theme": "0.1.0-beta.1",
     "astro": "7.4.13"
   },
   "engines": {

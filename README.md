@@ -8,8 +8,8 @@ interactions. Packages use the `@astrokjs` scope.
 
 [**See the live demo →**](https://f1b0-gh.github.io/astrok/)
 
-> **Status: early development (0.1.0).** Use a checkout or locally packed packages; a public npm
-> release is not available yet. APIs may change.
+> **Status: early development (0.1.0-beta.1).** Use a checkout or locally packed packages; a public
+> npm release is not available yet. APIs may change.
 
 ## Why
 
