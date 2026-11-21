@@ -30,6 +30,6 @@ Astro slots become props: default content is `children`, named content uses its
 slot name. Use Astro layouts for the document head. Native components do not
 need the separate `.client` build used by the hypermedia workspace example.
 
-The integration uses the pinned Solid 2 release candidate. Async rendering waits
+The example pins Solid 2.0.0, including its web runtime and compiler. Async rendering waits
 for completion before handing HTML to Astro. This does not add a deployment
 adapter, a streaming HTTP transport or server-function RPC.

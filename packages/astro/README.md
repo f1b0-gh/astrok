@@ -65,8 +65,8 @@ Without a client directive, the result is HTML only. `client:load`, `client:idle
 slots are passed as component props (`children` for the default slot).
 
 Install the pinned optional peers when using this integration: `solid-js`,
-`@solidjs/web` and `@solidjs/compiler` at `2.0.0-rc.21`, and
-`@solidjs/vite-plugin` at `3.0.0-next.57`. They are already installed in this
+`@solidjs/web` and `@solidjs/compiler` at `2.0.0`, and
+`@solidjs/vite-plugin` at `3.0.1`. They are already installed in this
 workspace. The OKF integration alone does not load them.
 
 Astro owns both build graphs; no separate client build is needed for these

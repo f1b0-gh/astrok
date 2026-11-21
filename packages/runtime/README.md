@@ -1,7 +1,8 @@
 # @astrok/runtime
 
 Native Solid 2 shared state, request ownership, and bounded patch transport.
-Version 0.1.0 requires `solid-js` and `@solidjs/web` 2.0.0-rc.21.
+Version 0.1.0 accepts `solid-js` and `@solidjs/web` ^2.0.0; the workspace
+example pins and tests both at 2.0.0.
 
 ```ts
 import { createSharedState, createLatestRequest, readPatches } from '@astrok/runtime';

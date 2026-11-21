@@ -23,3 +23,35 @@ shown in [the workspace example](examples/workspace/README.md).
 Graph indexes retain source references and authored relationships. They can be
 rebuilt from the Markdown; they do not generate claims or execute its contents.
 The [graph example](examples/graph/README.md) demonstrates typed relationships.
+
+## Review decisions (2026-11-21)
+
+The optional hypermedia entry point executes trusted application code. It does
+not sanitize HTML; native handlers, URLs and nested templates remain intact.
+Same-origin request policy and protected Solid roots constrain ownership, not
+trust. Event expressions compile once when bound, and render-only mutations do
+not rescan the region.
+
+Hypermedia still requires CSP `unsafe-eval`. Compiling static attributes at build
+time alone would not cover HTML received later over SSE or fetch. A future
+strict-CSP mode needs a compiler/handler registry contract shared by the page
+build and the fragment producer, including how unknown expressions fail. That
+is a separate API change. The core state/request/SSE entry point does not load
+the evaluator; use it with authored Solid handlers under a strict CSP.
+
+Shared-state updates validate the complete candidate and decoder output before
+committing, including cross-field invariants and schema transformations. This
+is proportional to total state size. Large independent data should use separate
+stores. A future field-update API must specify validation scope and atomicity;
+this review does not weaken the existing guarantee to optimize keystrokes.
+
+Package exports are the integration boundary for repository scripts and tests.
+There are no forwarding trees or legacy output-adoption layer. Adapted runtime
+code and its MIT attribution remain in this repository; those source-history
+references do not require sibling checkouts.
+
+Graph and SQLite generation are explicit opt-ins. The documentation example
+chooses a JSON graph; the generic workspace chooses neither. SQLite is an
+optional dependency and can be omitted at installation. Strict internal-link
+validation is a repository publishing policy, distinct from minimum OKF
+conformance and forward-compatible metadata handling.

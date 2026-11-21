@@ -41,3 +41,11 @@ Strict links are a project publishing policy, not an extra OKF schema rule.
 The documentation example opts into the JSON graph. SQLite generation is off
 by default; use `OKF_SQLITE=1 npm run build:docs` or `npm run index:sqlite` to
 request it. The plain workspace opts out of both graph and SQLite output.
+
+To try the public packages in another local project before an npm release,
+run `npm run build:packages` and pack the four packages as shown in
+[Releasing](RELEASING.md). Install the resulting four `.tgz` paths together with
+`npm install /absolute/path/to/artifacts/release/<file>.tgz …` in that project.
+Install the Astro/Solid peer dependencies matching the workspace manifests for
+the features you use. `npm run verify:packages` exercises this workflow in an
+automatically created independent consumer.
