@@ -32,13 +32,13 @@ try {
   await mkdir(path.join(fixture, 'src/pages'), { recursive: true });
   await mkdir(path.join(fixture, 'knowledge'));
   await writeFile(path.join(fixture, 'package.json'), '{"type":"module","private":true}\n');
-  // Exercise the exact README route and Markdown, so the quickstart cannot drift.
-  const readme = await readFile(new URL('../README.md', import.meta.url), 'utf8');
-  const route = readme.match(/Create `src\/pages\/\[\.\.\.slug\]\.astro`:[\s\S]*?```astro\n([\s\S]*?)```/)?.[1];
-  assert.ok(route, 'README plain-mode route');
+  // Exercise the exact getting-started route and Markdown, so the quickstart cannot drift.
+  const guide = await readFile(new URL('../knowledge/getting-started.md', import.meta.url), 'utf8');
+  const route = guide.match(/Create `src\/pages\/\[\.\.\.slug\]\.astro`:[\s\S]*?```astro\n([\s\S]*?)```/)?.[1];
+  assert.ok(route, 'Getting-started plain-mode route');
   await writeFile(path.join(fixture, 'src/pages/[...slug].astro'), route);
-  const example = readme.match(/```markdown\n([\s\S]*?)```/)?.[1];
-  assert.ok(example, 'README Markdown example');
+  const example = guide.match(/```markdown\n([\s\S]*?)```/)?.[1];
+  assert.ok(example, 'Getting-started Markdown example');
   await writeFile(path.join(fixture, 'knowledge/first-page.md'), example);
   await writeFile(path.join(fixture, 'knowledge/index.md'), '# Home\n- [First page](first-page.md)\n');
   await mkdir(path.join(fixture, 'knowledge/nested'));

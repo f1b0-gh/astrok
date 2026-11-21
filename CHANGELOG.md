@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Accept compatible Astro `^7.4.13` and Starlight `^0.43.1` peer updates while
+  keeping exact versions in the workspace.
+- Recover hypermedia bindings after partially applied patches and refresh only
+  affected bindings. Parse SSE chunks without per-byte JavaScript arrays while
+  retaining byte limits, UTF-8 validation and cancellation.
+- Move the complete installation recipe into the getting-started guide, add
+  security/contribution guidance and issue templates, and preserve runtime
+  source attribution in a packaged notice.
+
 - Move public packages and examples to the `@astrokjs` npm scope. Update imports,
   workspace dependencies and tarball installation instructions together. Add
   repository metadata and explicit public access for future npm releases.
