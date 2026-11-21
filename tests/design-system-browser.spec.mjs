@@ -6,6 +6,12 @@ const base = process.env.ASTROK_BASE || '/';
 for (const theme of ['dark', 'light']) {
   test(`design preview: ${theme} is readable, responsive and keyboard accessible`, async ({ page }, testInfo) => {
     const pageErrors = [];
+    const fontRequests = [];
+    const externalFonts = [];
+    page.on('request', request => {
+      if (request.resourceType() === 'font') fontRequests.push(request.url());
+      if (/fonts\.(googleapis|gstatic)\.com/.test(request.url())) externalFonts.push(request.url());
+    });
     page.on('pageerror', error => pageErrors.push(error.message));
     await page.goto(`${base}design-system/${theme === 'light' ? 'light/' : ''}`);
     await expect(page.getByRole('heading', { name: 'Astrok, ready to respond.' })).toBeVisible();
@@ -34,7 +40,12 @@ for (const theme of ['dark', 'light']) {
     const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
     expect(axe.violations).toEqual([]);
     const fonts = await page.evaluate(() => ['Sora', 'Inter', 'JetBrains Mono'].map(name => ({ name, loaded: Array.from(document.fonts).some(font => font.family.replace(/["']/g, '') === name && font.status === 'loaded') })));
-    const audit = { theme, base, project: testInfo.project.name, fonts, images, focus, axeViolations: axe.violations.length, axeIncomplete: axe.incomplete.map(item => item.id), pageErrors };
+    expect(fonts.every(font => font.loaded)).toBe(true);
+    expect(fontRequests.length).toBeGreaterThan(0);
+    expect(fontRequests.every(url => new URL(url).origin === new URL(page.url()).origin && new URL(url).pathname.startsWith(base))).toBe(true);
+    expect(externalFonts).toEqual([]);
+    await expect(page.locator('link[rel=preconnect]')).toHaveCount(0);
+    const audit = { fontRequests, externalFonts, theme, base, project: testInfo.project.name, fonts, images, focus, axeViolations: axe.violations.length, axeIncomplete: axe.incomplete.map(item => item.id), pageErrors };
     await writeFile(testInfo.outputPath('design-audit.json'), JSON.stringify(audit, null, 2) + '\n');
     await page.evaluate(() => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); window.scrollTo(0, 0); });
     await page.screenshot({ path: testInfo.outputPath(`preview-${theme}.png`), fullPage: true });
