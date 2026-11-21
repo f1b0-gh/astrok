@@ -1,21 +1,21 @@
-# @astrok/theme
+# @astrokjs/theme
 
 Shared CSS and SVG assets for every astrok example. The design source remains in
-`resources/astrok-design-system/`; `npm run build --workspace @astrok/theme`
+`resources/astrok-design-system/`; `npm run build --workspace @astrokjs/theme`
 compiles that repository-relative input. Installed tarballs are self-contained:
 consumers need only the exported CSS, JSON and logos in `dist/`.
 
 ```css
-@import '@astrok/theme/fonts.css';
-@import '@astrok/theme/tokens.css';
+@import '@astrokjs/theme/fonts.css';
+@import '@astrokjs/theme/tokens.css';
 ```
 
 Set `data-theme="dark"` or `data-theme="light"` on the document or a specimen
 container. Dark is the default. The Starlight adapter is
-`@astrok/theme/starlight.css`; it also maps the search controls from decorative
+`@astrokjs/theme/starlight.css`; it also maps the search controls from decorative
 hairlines to the control-border role and supplies a visible keyboard outline. CSS exposes the source token names plus typography
 variables (`--text-h1-size`, `--text-h1-leading`, etc.). `tokens.json` retains the
-original values. Logos are exported as `@astrok/theme/logos/<filename>.svg`; use
+original values. Logos are exported as `@astrokjs/theme/logos/<filename>.svg`; use
 the dark colored mark only on dark backgrounds and the ink mark on light ones.
 
 `fonts.css` bundles Sora 600, Inter 400/500/600/700 and JetBrains Mono 400/500

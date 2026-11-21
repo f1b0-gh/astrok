@@ -17,7 +17,7 @@ async function fixture(t) {
 }
 
 test('package root preserves parser exports and future nested metadata', async () => {
-  const { parseSource, parseDocument, readBundle } = await import('@astrok/okf');
+  const { parseSource, parseDocument, readBundle } = await import('@astrokjs/okf');
   assert.equal(typeof readBundle, 'function');
   assert.equal(parseDocument, parseSource);
   const result = parseDocument(source, 'topic.md');
@@ -27,7 +27,7 @@ test('package root preserves parser exports and future nested metadata', async (
 });
 
 test('site exports preserve base URLs across pages, raw sources, links and manifest', async t => {
-  const { generateSite, loadSite } = await import('@astrok/okf/site');
+  const { generateSite, loadSite } = await import('@astrokjs/okf/site');
   const { root, directory } = await fixture(t);
   const publicDir = path.join(directory, 'public');
   const docsDir = path.join(directory, 'docs');
@@ -44,7 +44,7 @@ test('site exports preserve base URLs across pages, raw sources, links and manif
 });
 
 test('generator refuses caller-owned directories and symlinked output without removing files', async t => {
-  const { generateSite } = await import('@astrok/okf/site');
+  const { generateSite } = await import('@astrokjs/okf/site');
   const { root, directory } = await fixture(t);
   const docsDir = path.join(directory, 'caller');
   await mkdir(docsDir);
@@ -57,7 +57,7 @@ test('generator refuses caller-owned directories and symlinked output without re
 });
 
 test('integration validates options before mutation and supports plain Astro without Starlight', async t => {
-  const { okfIntegration } = await import('@astrok/astro');
+  const { okfIntegration } = await import('@astrokjs/astro');
   assert.throws(() => okfIntegration({ graph: 'invalid' }), /graph/);
   assert.throws(() => okfIntegration({ mystery: true }), /mystery/);
   const { root, directory } = await fixture(t);
@@ -74,7 +74,7 @@ test('integration validates options before mutation and supports plain Astro wit
 });
 
 test('graph publication keeps provenance and base-aware guides without importing SQLite', async t => {
-  const { publishIndex, KnowledgeGraph } = await import('@astrok/okf/graph');
+  const { publishIndex, KnowledgeGraph } = await import('@astrokjs/okf/graph');
   const { root, directory } = await fixture(t);
   const publicDir = path.join(directory, 'public');
   const publication = await publishIndex({ root, publicDir, sqlite: false, base: '/portal/' });
@@ -97,7 +97,7 @@ test('graph publication keeps provenance and base-aware guides without importing
 });
 
 test('output ownership rejects source ancestors and links inside an owned tree', async t => {
-  const { generateSite } = await import('@astrok/okf/site');
+  const { generateSite } = await import('@astrokjs/okf/site');
   const { root, directory } = await fixture(t);
   await assert.rejects(generateSite({ root, docsDir: directory, publicDir: path.join(directory + '-public') }), /canonical knowledge/);
   const docsDir = path.join(directory, 'docs');
@@ -111,16 +111,16 @@ test('output ownership rejects source ancestors and links inside an owned tree',
 });
 
 test('overlapping page and raw output directories are refused before publication', async t => {
-  const { generateSite } = await import('@astrok/okf/site');
+  const { generateSite } = await import('@astrokjs/okf/site');
   const { root, directory } = await fixture(t);
   const publicDir = path.join(directory, 'public');
   await assert.rejects(generateSite({ root, docsDir: publicDir, publicDir }), /overlap/);
 });
 
 test('graph and SQLite generation require explicit opt-in', async t => {
-  const { okfOptionsSchema } = await import('@astrok/astro');
+  const { okfOptionsSchema } = await import('@astrokjs/astro');
   assert.equal(okfOptionsSchema.parse({}).graph, false);
-  const { publishIndex } = await import('@astrok/okf/graph');
+  const { publishIndex } = await import('@astrokjs/okf/graph');
   const { root, directory } = await fixture(t);
   const publication = await publishIndex({root, publicDir: path.join(directory, 'optional-public')});
   assert.equal(publication.database, null);
@@ -128,7 +128,7 @@ test('graph and SQLite generation require explicit opt-in', async t => {
 });
 
 test('default integration publishes sources without a graph directory', async t => {
-  const { okfIntegration } = await import('@astrok/astro');
+  const { okfIntegration } = await import('@astrokjs/astro');
   const { root, directory } = await fixture(t);
   const publicDir = path.join(directory, 'plain-public');
   await okfIntegration({root, publicDir, presentation: 'plain'}).hooks['astro:config:setup']({
@@ -140,7 +140,7 @@ test('default integration publishes sources without a graph directory', async t 
 });
 
 test('integration rejects invalid links by default before publishing plain or Starlight output', async t => {
-  const { okfIntegration, okfOptionsSchema } = await import('@astrok/astro');
+  const { okfIntegration, okfOptionsSchema } = await import('@astrokjs/astro');
   assert.equal(okfOptionsSchema.parse({}).strictLinks, true);
   assert.throws(() => okfIntegration({strictLinks: 'false'}), /strictLinks/);
   for (const presentation of ['plain', 'starlight']) {
@@ -158,7 +158,7 @@ test('integration rejects invalid links by default before publishing plain or St
 });
 
 test('integration warning-only opt-out still reports bad links and strict mode allows unrelated warnings', async t => {
-  const {okfIntegration} = await import('@astrok/astro');
+  const {okfIntegration} = await import('@astrokjs/astro');
   const {root, directory} = await fixture(t);
   await writeFile(path.join(root, 'topic.md'), '---\ntype: Guide\n---\n[Missing](missing.md)\n');
   const publicDir = path.join(directory, 'public');
@@ -179,7 +179,7 @@ test('integration warning-only opt-out still reports bad links and strict mode a
 
 test('strict integration reports invalid source edits and recovers without replacing good output', {timeout: 10000}, async t => {
   const {EventEmitter} = await import('node:events');
-  const {okfIntegration} = await import('@astrok/astro');
+  const {okfIntegration} = await import('@astrokjs/astro');
   const {root, directory} = await fixture(t);
   const publicDir = path.join(directory, 'public');
   let update;
@@ -214,7 +214,7 @@ test('strict integration reports invalid source edits and recovers without repla
 });
 
 test('build output omits owned markers while retaining source ownership and caller files', async t => {
-  const {okfIntegration} = await import('@astrok/astro');
+  const {okfIntegration} = await import('@astrokjs/astro');
   const {cp} = await import('node:fs/promises');
   const {pathToFileURL} = await import('node:url');
   for (const graph of [false, true]) {

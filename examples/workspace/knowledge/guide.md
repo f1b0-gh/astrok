@@ -71,6 +71,12 @@ so this optional layer works without CSP `unsafe-eval`. Fetched fragments use
 the same registered names. Region protection does not make untrusted HTML safe.
 Solid can also use state and transport directly without the hypermedia layer.
 
+These state and transport helpers come from
+[`@astrokjs/runtime`](https://github.com/f1b0-gh/astrok/tree/main/packages/runtime).
+The optional HTML adapter is its `@astrokjs/runtime/hypermedia` entry point;
+the demo's styles come from
+[`@astrokjs/theme`](https://github.com/f1b0-gh/astrok/tree/main/packages/theme).
+
 Vite compiles Solid before Astro bundles the final browser assets. Navigation
 and remounting dispose components, listeners, requests and streams before a
 fresh setup. The main source files are `src/components/Workspace.astro`,

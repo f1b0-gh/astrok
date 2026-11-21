@@ -1,5 +1,5 @@
 {
-  "name": "@astrok/theme",
+  "name": "@astrokjs/theme",
   "version": "0.1.0",
   "type": "module",
   "description": "Shared astrok design tokens, typography, Starlight adapter and logos",
@@ -26,5 +26,17 @@
     "@fontsource/inter": "5.3.0",
     "@fontsource/jetbrains-mono": "5.3.0",
     "@fontsource/sora": "5.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/f1b0-gh/astrok.git",
+    "directory": "packages/theme"
+  },
+  "homepage": "https://github.com/f1b0-gh/astrok/tree/main/packages/theme#readme",
+  "bugs": {
+    "url": "https://github.com/f1b0-gh/astrok/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

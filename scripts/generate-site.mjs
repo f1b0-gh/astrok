@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { generateSite } from '@astrok/okf/site';
-import { publishIndex } from '@astrok/okf/graph';
+import { generateSite } from '@astrokjs/okf/site';
+import { publishIndex } from '@astrokjs/okf/graph';
 try {
   const bundle = await generateSite();
   await publishIndex({ bundle, sqlite: process.env.OKF_SQLITE === '1' });

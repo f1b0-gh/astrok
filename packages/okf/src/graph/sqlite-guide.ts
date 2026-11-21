@@ -29,7 +29,7 @@ site is static and has no HTTP SQL execution endpoint.
 
 In this repository, the TypeScript wrapper handles WASM initialization and loading:
 
-  import { SqliteKnowledgeIndex } from '@astrok/okf/sqlite';
+  import { SqliteKnowledgeIndex } from '@astrokjs/okf/sqlite';
   const index = await SqliteKnowledgeIndex.open('.generated/public/graph/knowledge.sqlite');
   try {
     console.log(index.search('your terms', { limit: 10 }));

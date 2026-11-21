@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, readFile, rm, access } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { generateSite } from '@astrok/okf/site';
+import { generateSite } from '@astrokjs/okf/site';
 
 async function fixture(t, files) {
   const temp = await mkdtemp(path.join(tmpdir(), 'okf-site-'));
@@ -99,7 +99,7 @@ test('regeneration supports replacing an asset directory with a file and back', 
 });
 
 test('strict site publication rejects link diagnostics before changing outputs', async t => {
-  const { loadSite } = await import('@astrok/okf/site');
+  const { loadSite } = await import('@astrokjs/okf/site');
   for (const presentation of ['plain', 'starlight']) {
     const options = await fixture(t, { 'topic.md': source('# Topic\n[valid](#topic)\n') });
     options.presentation = presentation;
@@ -125,7 +125,7 @@ test('strict site publication rejects link diagnostics before changing outputs',
 });
 
 test('strict site publication preserves ordinary warnings and low-level warning-only mode', async t => {
-  const { loadSite } = await import('@astrok/okf/site');
+  const { loadSite } = await import('@astrokjs/okf/site');
   const options = await fixture(t, {
     'topic.md': source('# Topic\n[valid](#topic)\n[external](https://unreachable.example.invalid/)\n', 'custom: {kept: true}\n'),
     'untyped.md': '# Skipped\n',

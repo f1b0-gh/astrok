@@ -54,4 +54,4 @@ await writeFile(new URL('starlight.css', destination), `@import './tokens.css';\
 for (const name of ['astrok-mark-dark.svg', 'astrok-mark-ink.svg', 'astrok-mark-white.svg', 'astrok-app-icon.svg']) {
   await copyFile(new URL(`assets/Logos/${name}`, source), new URL(`logos/${name}`, destination));
 }
-console.log(`Built @astrok/theme from ${fileURLToPath(source)}`);
+console.log(`Built @astrokjs/theme from ${fileURLToPath(source)}`);

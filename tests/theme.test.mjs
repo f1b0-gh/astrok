@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 
 test('packaged font CSS uses local WOFF2 assets with retained font licenses', async () => {
-  const stylesheet = new URL(import.meta.resolve('@astrok/theme/fonts.css'));
+  const stylesheet = new URL(import.meta.resolve('@astrokjs/theme/fonts.css'));
   const css = await readFile(stylesheet, 'utf8');
   assert.doesNotMatch(css, /https?:|@import/);
   const files = [...css.matchAll(/url\(['"]?([^)'"\s]+)['"]?\)/g)].map(match => match[1]);

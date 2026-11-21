@@ -1,5 +1,5 @@
 {
-  "name": "@astrok/okf",
+  "name": "@astrokjs/okf",
   "version": "0.1.0",
   "type": "module",
   "description": "Canonical OKF parsing, static publication and optional knowledge graph",
@@ -44,5 +44,17 @@
   "optionalDependencies": {
     "@sqlite.org/sqlite-wasm": "3.54.1-build1"
   },
-  "license": "MIT OR Apache-2.0"
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/f1b0-gh/astrok.git",
+    "directory": "packages/okf"
+  },
+  "homepage": "https://github.com/f1b0-gh/astrok/tree/main/packages/okf#readme",
+  "bugs": {
+    "url": "https://github.com/f1b0-gh/astrok/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

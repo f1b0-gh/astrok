@@ -2,6 +2,7 @@ import { lstat, readdir, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const marker = '.astrok-owned.json';
+// Persisted format identifier: keep existing generated directories usable across npm scope changes.
 const signature = '{"owner":"@astrok/okf","version":1}\n';
 async function physical(file: string): Promise<string> {
   const { physicalPath } = await import('../graph/files.ts');

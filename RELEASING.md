@@ -5,9 +5,13 @@ in package.json does not mean that version has been published. Release work is a
 reviewed maintainer action; CI verifies PRs and deploys the demo, but does not
 publish npm packages.
 
+The npm organization is `astrokjs`; public packages use the `@astrokjs` scope.
+The project and GitHub repository remain named Astrok. The root and example
+workspaces are private and must not be published.
+
 1. Prepare a release PR from current main. Select a version for the four public
    packages (`okf`, `astro`, `runtime`, `theme`); update their manifests, internal
-   `@astrok/*` dependency versions, and root/example dependency pins together.
+   `@astrokjs/*` dependency versions, and root/example dependency pins together.
    Keep the root and examples private. Regenerate `package-lock.json` with
    `npm install --package-lock-only --ignore-scripts` and update the changelog.
 2. From a clean checkout with Node 24, run `npm ci`, install Playwright Chromium
@@ -17,7 +21,8 @@ publish npm packages.
    declarations, builds and browser behavior. Record the commit and outcomes.
 3. Build and pack the reviewed commit. Inspect each archive's files, exports,
    licenses and dependencies. In particular, retain the runtime's MIT license
-   and source attribution; other packages are dual-licensed.
+   and source attribution; other packages' code is dual-licensed. The theme's
+   bundled fonts retain their separate SIL Open Font License files in `dist/fonts`.
 
    ```sh
    npm run build:packages
@@ -29,7 +34,7 @@ publish npm packages.
    ```
 
 4. Check npm scope ownership/access and whether each selected version already
-   exists (`npm view @astrok/okf versions --json`, and likewise for each package).
+   exists (`npm view @astrokjs/okf versions --json`, and likewise for each package).
    Preview each exact archive with `npm publish --dry-run artifacts/release/<file>.tgz`.
    A maintainer must review the results and approve publication before proceeding.
 5. After approval and authenticated npm access, publish the inspected archives

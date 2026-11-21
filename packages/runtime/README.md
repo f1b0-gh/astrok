@@ -1,11 +1,11 @@
-# @astrok/runtime
+# @astrokjs/runtime
 
 Native Solid 2 shared state, request ownership, and bounded patch transport.
 Version 0.1.0 accepts `solid-js` and `@solidjs/web` ^2.0.0; the workspace
 example pins and tests both at 2.0.0.
 
 ```ts
-import { createSharedState, createLatestRequest, readPatches } from '@astrok/runtime';
+import { createSharedState, createLatestRequest, readPatches } from '@astrokjs/runtime';
 import { z } from 'zod';
 
 // If using Zod under strict CSP, configure it before constructing schemas.
@@ -51,7 +51,7 @@ rejected state is reported through `onError` and leaves accepted state unchanged
 For independent fields next to a large dataset, opt into `createFieldState`:
 
 ```ts
-import { createFieldState } from '@astrok/runtime';
+import { createFieldState } from '@astrokjs/runtime';
 
 const fields = createFieldState({ note: '', rows: [] as string[] }, {
   note: z.string().max(200).parse,
@@ -90,10 +90,10 @@ Readers cancel and release their locks on abort/error/completion. Incomplete
 frames fail; automatic reconnect/replay is outside this API.
 
 The root import does not import hypermedia or morphdom. The optional
-`@astrok/runtime/hypermedia` subpath uses `morphdom` 2.7.8 and registered callbacks:
+`@astrokjs/runtime/hypermedia` subpath uses `morphdom` 2.7.8 and registered callbacks:
 
 ```ts
-import { createHypermedia } from '@astrok/runtime/hypermedia';
+import { createHypermedia } from '@astrokjs/runtime/hypermedia';
 const html = createHypermedia(shared, {
   allowedPaths: ['/fixtures/'],
   protectedRoots: [solidMount],
@@ -176,7 +176,7 @@ Source attribution: state/SSE and hypermedia derive from soc-proto's
 ownership derives from ECSpect's `site/analytics/src/selection.mjs`. No sibling
 repository is needed to build or use this package. See [Building and testing](../../BUILDING.md) for the current verification commands.
 
-Build with `npm run build --workspace=@astrok/runtime`. Declarations and executable
+Build with `npm run build --workspace=@astrokjs/runtime`. Declarations and executable
 ESM are emitted to `dist/`; the maintained assets are `src/`, tests and manifests.
 Browser ownership, focus and remount qualification belongs to the consuming
 example's browser suite.

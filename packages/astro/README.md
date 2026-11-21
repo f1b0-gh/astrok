@@ -1,4 +1,4 @@
-# @astrok/astro
+# @astrokjs/astro
 
 `okfIntegration(options?)` publishes canonical OKF sources, a metadata manifest and
 optional graph artifacts during Astro setup and source edits. Configuration uses
@@ -7,7 +7,7 @@ This server/build dependency does not enter browser bundles. OKF document metada
 is separately opaque and never stripped by the configuration schema.
 
 ```js
-import { okfIntegration } from '@astrok/astro';
+import { okfIntegration } from '@astrokjs/astro';
 export default {
   base: '/portal/',
   integrations: [okfIntegration({
@@ -22,7 +22,7 @@ export default {
 
 Paths resolve against Astro's project root. `docsDir` defaults to
 `src/content/docs`; the default presentation is `starlight` for compatibility.
-Plain Astro consumes `loadSite` from `@astrok/okf/site` in application routes and
+Plain Astro consumes `loadSite` from `@astrokjs/okf/site` in application routes and
 has no Starlight import or layout dependency. The optional `./starlight` export
 makes the existing presentation choice explicit; consumers install/configure
 Starlight themselves. `base` defaults to Astro's configured base; an explicit
@@ -53,9 +53,18 @@ reloads the page, including when restoring the previous valid source.
 
 ## Native Solid 2
 
+Install the optional runtime and compiler dependencies in your Astro project:
+
+```sh
+npm install solid-js@2.0.0 @solidjs/web@2.0.0
+npm install --save-dev @solidjs/compiler@2.0.0 @solidjs/vite-plugin@3.0.1
+```
+
+Add the integration alongside any existing integrations:
+
 ```js
 import { defineConfig } from 'astro/config';
-import { solidIntegration } from '@astrok/astro/solid';
+import { solidIntegration } from '@astrokjs/astro/solid';
 
 export default defineConfig({ integrations: [solidIntegration()] });
 ```
@@ -71,13 +80,11 @@ import Counter from '../components/Counter';
 
 Without a client directive, the result is HTML only. `client:load`, `client:idle`,
 `client:visible` and `client:media` hydrate that HTML. Use
-`client:only="@astrok/solid"` for browser-only rendering. Default and named Astro
+`client:only="@astrokjs/solid"` for browser-only rendering. Default and named Astro
 slots are passed as component props (`children` for the default slot).
 
-Install the pinned optional peers when using this integration: `solid-js`,
-`@solidjs/web` and `@solidjs/compiler` at `2.0.0`, and
-`@solidjs/vite-plugin` at `3.0.1`. They are already installed in this
-workspace. The OKF integration alone does not load them.
+These dependencies are already installed in this workspace. The OKF integration
+alone does not load them. Package peer ranges accept compatible Solid 2 releases.
 
 Astro owns both build graphs; no separate client build is needed for these
 components. The native Solid compiler handles JSX for the project. Use Astro

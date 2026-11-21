@@ -38,5 +38,5 @@ and source downloads remain readable without JavaScript.
 
 To add Astrok to an existing Astro project, follow the
 [installation instructions](https://github.com/f1b0-gh/astrok#use-it-in-your-astro-project).
-Packages are currently installed from local tarballs; there is no public npm
-release yet.
+The integration uses `@astrokjs/astro` and `@astrokjs/okf`. Packages are currently
+installed from local tarballs; there is no public npm release yet.

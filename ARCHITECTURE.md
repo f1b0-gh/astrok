@@ -5,10 +5,10 @@ interactive components; a graph index is optional.
 
 | Package | Responsibility |
 | --- | --- |
-| [`@astrok/okf`](packages/okf/README.md) | Read OKF bundles, resolve links, publish sources and build graph indexes |
-| [`@astrok/astro`](packages/astro/README.md) | Astro integration and native Solid 2 rendering |
-| [`@astrok/runtime`](packages/runtime/README.md) | Shared state, requests and optional hypermedia interactions |
-| [`@astrok/theme`](packages/theme/README.md) | Styles, fonts, tokens and logos |
+| [`@astrokjs/okf`](packages/okf/README.md) | Read OKF bundles, resolve links, publish sources and build graph indexes |
+| [`@astrokjs/astro`](packages/astro/README.md) | Astro integration and native Solid 2 rendering |
+| [`@astrokjs/runtime`](packages/runtime/README.md) | Shared state, requests and optional hypermedia interactions |
+| [`@astrokjs/theme`](packages/theme/README.md) | Styles, fonts, tokens and logos |
 
 Each site owns its Markdown bundle. `knowledge/` contains the Astrok user guide;
 `examples/workspace/knowledge/` belongs to the workspace demo. The build derives
@@ -17,6 +17,9 @@ Generated files are disposable; edits belong in the source bundle. Ownership
 markers stay beside generated sources but are removed from the resolved Astro
 client output in `astro:build:generated`; only Astrok's own marker copies in
 `okf/` and the enabled `graph/` publication are removed.
+The persisted ownership signature retains `@astrok/okf` as its format identifier
+so existing generated directories remain usable after the npm scope changes to
+`@astrokjs`. It is not a package import.
 
 Site publication supports `strictLinks: true` to reject resolved-link diagnostics
 before touching generated output. The Astro integration enables it by default;

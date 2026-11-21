@@ -1,6 +1,6 @@
 # Astrok design system
 
-Source assets for [`@astrok/theme`](../../packages/theme/README.md). The package
+Source assets for [`@astrokjs/theme`](../../packages/theme/README.md). The package
 build reads this directory and produces the CSS, tokens and logos used by the
 Astro examples.
 
@@ -15,8 +15,9 @@ control borders. The colored logo belongs on dark backgrounds; use the ink
 version on light backgrounds.
 
 Headings use Sora, body text uses Inter, and code uses JetBrains Mono. The theme's
-optional font stylesheet loads Google Fonts; no font files are bundled.
+optional font stylesheet uses bundled WOFF2 files, served from your own site.
+The package includes the fonts' SIL Open Font License notices.
 
-From the repository root, run `npm run build --workspace @astrok/theme` after
+From the repository root, run `npm run build --workspace @astrokjs/theme` after
 editing these sources. Run the workspace and open `/design-system/` to inspect
 the result. Generated files in `packages/theme/dist/` stay out of Git.

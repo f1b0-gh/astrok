@@ -2,7 +2,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { AstroIntegration } from 'astro';
 import { z } from 'zod';
-import { generateSite, normalizeBase, assertOwnedDirectory, assertDisjointDirectories } from '@astrok/okf/site';
+import { generateSite, normalizeBase, assertOwnedDirectory, assertDisjointDirectories } from '@astrokjs/okf/site';
 
 /** Framework options are strict; canonical OKF metadata remains opaque/preserved. */
 export const okfOptionsSchema = z.strictObject({
@@ -22,7 +22,7 @@ export function okfIntegration(options: OkfOptions = {}): AstroIntegration {
   const parsed = okfOptionsSchema.parse(options);
   let generatedPublicDir: string | undefined;
   return {
-    name: '@astrok/astro',
+    name: '@astrokjs/astro',
     hooks: {
       'astro:build:generated': async ({ dir }) => {
         const outputDir = fileURLToPath(dir);
@@ -69,7 +69,7 @@ export function okfIntegration(options: OkfOptions = {}): AstroIntegration {
           const bundle = await generateSite({ root, docsDir, publicDir, base, presentation: parsed.presentation, strictLinks: parsed.strictLinks });
           if (parsed.graph) {
             await assertOwnedDirectory(root, path.join(publicDir, 'graph'), true);
-            const { publishIndex } = await import('@astrok/okf/graph');
+            const { publishIndex } = await import('@astrokjs/okf/graph');
             await publishIndex({ root, publicDir, bundle, sqlite: parsed.sqlite ?? process.env.OKF_SQLITE === '1', base });
           }
           for (const warning of bundle.warnings) logger.warn(warning);

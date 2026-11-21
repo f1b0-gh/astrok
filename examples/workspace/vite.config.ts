@@ -8,7 +8,7 @@ export default defineConfig({
     outDir: '.client',
     lib: { entry: 'src/client/workspace.tsx', formats: ['es'], fileName: () => 'workspace.js' },
     rolldownOptions: {
-      external: id => ['solid-js', '@solidjs/web', '@astrok/runtime', 'zod'].some(name => id === name || id.startsWith(name + '/')),
+      external: id => ['solid-js', '@solidjs/web', '@astrokjs/runtime', 'zod'].some(name => id === name || id.startsWith(name + '/')),
     },
   },
 });

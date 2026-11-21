@@ -19,7 +19,7 @@ test.beforeAll(async () => {
         resolveId: (id) => (id === entry ? entry : undefined),
         load: (id) =>
           id === entry
-            ? 'export {createHypermedia} from "@astrok/runtime/hypermedia"; export {createFieldState, createSharedState} from "@astrok/runtime"; export {flush} from "solid-js";'
+            ? 'export {createHypermedia} from "@astrokjs/runtime/hypermedia"; export {createFieldState, createSharedState} from "@astrokjs/runtime"; export {flush} from "solid-js";'
             : undefined,
       },
     ],

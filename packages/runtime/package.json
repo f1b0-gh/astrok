@@ -1,5 +1,5 @@
 {
-  "name": "@astrok/runtime",
+  "name": "@astrokjs/runtime",
   "version": "0.1.0",
   "type": "module",
   "files": [
@@ -32,5 +32,17 @@
     "node": ">=24 <25"
   },
   "license": "MIT",
-  "description": "Solid 2 shared state, cancellable requests and optional trusted hypermedia"
+  "description": "Solid 2 shared state, cancellable requests and optional trusted hypermedia",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/f1b0-gh/astrok.git",
+    "directory": "packages/runtime"
+  },
+  "homepage": "https://github.com/f1b0-gh/astrok/tree/main/packages/runtime#readme",
+  "bugs": {
+    "url": "https://github.com/f1b0-gh/astrok/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

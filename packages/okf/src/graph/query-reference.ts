@@ -61,7 +61,7 @@ Evidence joins edges by edgeId. Source hashes identify ingested file bytes.
 
 In this repository, use TypeScript on Node 24:
 
-  import { KnowledgeGraph } from '@astrok/okf/graph';
+  import { KnowledgeGraph } from '@astrokjs/okf/graph';
   const index = await KnowledgeGraph.open('knowledge');
   const matches = index.search('your terms', { limit: 5 });
   const node = index.getNode('your/concept-id');

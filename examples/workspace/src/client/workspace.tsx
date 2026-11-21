@@ -1,7 +1,7 @@
 import { createEffect, createSignal, onCleanup } from 'solid-js';
 import { render, For, Show } from '@solidjs/web';
-import { createSharedState, createLatestRequest, readPatches, type RequestState } from '@astrok/runtime';
-import { createHypermedia } from '@astrok/runtime/hypermedia';
+import { createSharedState, createLatestRequest, readPatches, type RequestState } from '@astrokjs/runtime';
+import { createHypermedia } from '@astrokjs/runtime/hypermedia';
 import { z } from 'zod';
 
 // Application-owned decoders must also avoid JIT compilation under strict CSP.

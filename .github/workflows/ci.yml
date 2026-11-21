@@ -56,7 +56,7 @@ jobs:
           ASTROK_BASE: ${{ steps.pages.outputs.base_url && format('{0}/', steps.pages.outputs.base_path) || '/astrok/' }}
           ASTROK_STATIC_DEMO: '1'
         run: npm run build
-      - run: npm run check --workspace @astrok/example-workspace
+      - run: npm run check --workspace @astrokjs/example-workspace
       - run: npx playwright install --with-deps chromium
       - name: Test static hosting
         env:

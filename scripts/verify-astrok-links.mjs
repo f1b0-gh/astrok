@@ -15,7 +15,7 @@ const topic = path.join(fixture, 'knowledge/topic.md');
 const output = path.join(fixture, 'public/okf/topic.md');
 async function configure(strictLinks, base = '/') {
   const options = { presentation: 'plain', ...(strictLinks === undefined ? {} : { strictLinks }) };
-  await writeFile(path.join(fixture, 'astro.config.mjs'), `import {okfIntegration} from '@astrok/astro';\nexport default {base: ${JSON.stringify(base)}, integrations: [okfIntegration(${JSON.stringify(options)})]};\n`);
+  await writeFile(path.join(fixture, 'astro.config.mjs'), `import {okfIntegration} from '@astrokjs/astro';\nexport default {base: ${JSON.stringify(base)}, integrations: [okfIntegration(${JSON.stringify(options)})]};\n`);
 }
 async function build() {
   try {

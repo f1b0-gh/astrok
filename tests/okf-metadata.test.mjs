@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import * as api from '@astrok/okf';
+import * as api from '@astrokjs/okf';
 const read = (metadata, now = '2026-11-20T12:00:00Z') => {
   assert.equal(typeof api.readMetadata, 'function', 'export the OKF 0.3 metadata consumer');
   return api.readMetadata(metadata, { now: new Date(now) });

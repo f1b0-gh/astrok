@@ -5,10 +5,10 @@ import path from 'node:path';
 import { tmpdir } from 'node:os';
 import { promisify } from 'node:util';
 import { execFile } from 'node:child_process';
-import { publishIndex } from '@astrok/okf/graph';
-import { SqliteKnowledgeIndex } from '@astrok/okf/sqlite';
-import { WasmDatabase } from '@astrok/okf/sqlite';
-import { OKF_SPEC } from '@astrok/okf/graph';
+import { publishIndex } from '@astrokjs/okf/graph';
+import { SqliteKnowledgeIndex } from '@astrokjs/okf/sqlite';
+import { WasmDatabase } from '@astrokjs/okf/sqlite';
+import { OKF_SPEC } from '@astrokjs/okf/graph';
 
 const exec = promisify(execFile);
 test('CLI builds and queries real WASM snapshot and rejects invalid arguments', async t => {
@@ -51,7 +51,7 @@ test('published guide explains only query usage plus OKF format/version, and SQL
     const exported = index.export();
     assert.equal(exported.metadata.okf_spec_revision, OKF_SPEC.revision);
     assert.equal(exported.metadata.bundle_declared_okf_version, '"0.3-future"');
-    const { KnowledgeGraph } = await import('@astrok/okf/graph');
+    const { KnowledgeGraph } = await import('@astrokjs/okf/graph');
     const memory = KnowledgeGraph.fromJSON(JSON.parse(await readFile(path.join(publicDir, 'graph/graph.json'), 'utf8')));
     assert.deepEqual(memory.getNode('a'), index.getNode('a'));
     assert.deepEqual(memory.export().sources, JSON.parse(JSON.stringify(exported.sources)));

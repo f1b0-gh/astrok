@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { parseArgs } from 'node:util';
-import { readBundle } from '@astrok/okf';
+import { readBundle } from '@astrokjs/okf';
 
 try {
   const {values, positionals} = parseArgs({options: {strict: {type: 'boolean'}}, allowPositionals: true});
