@@ -25,6 +25,8 @@ use Astro client navigation; Home and Guide remain static documentation.
 For development, `npm run dev --workspace @astrok/example-workspace` watches the
 independent Solid build and runs Astro on loopback port 4341. It is a frontend
 development server; use the fixture preview to exercise the synthetic data API.
+Watch rebuilds retain the previous compiled module so concurrent Astro requests
+do not see a missing file. Production builds still clean their output.
 Compiled-entry edits reload the development interface; persistent hot-edit state
 is not promised. Production navigation explicitly disposes the previous workspace.
 
