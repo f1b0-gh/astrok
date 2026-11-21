@@ -40,6 +40,12 @@ schema transforms. Invalid changes leave the state unchanged; deleting a require
 field fails validation. Use optional fields for deletable properties, and an open
 record decoder for deliberately dynamic state. The decoder need not use Zod.
 
+Validation, cloning and reconciliation visit the complete state on each update.
+Keep large independent datasets in separate stores; this API does not promise
+constant-time field writes. Number inputs produce numbers or `null` when cleared; use a nullable decoder if clearing
+is allowed. Invalid input or rejected state is reported through `onError` and
+leaves the accepted state unchanged.
+
 `readPatches(response, signal, { signals, elements? }, options?)` handles JSON,
 trusted HTML, and the Datastar `datastar-patch-signals` / `datastar-patch-elements`
 SSE subset. `signals` receives `(patch, onlyIfMissing)`. Options are
@@ -66,9 +72,15 @@ The optional subpath requires optional dependencies `morphdom` 2.7.8 and Acorn
 8.19.0. It supports trusted `data-signals`, `data-text`, `data-show`, `data-bind`,
 `data-on`, `data-effect`, `data-class` and `data-attr` attributes. Expressions use
 `$state` names and `@get` / `@peek` actions. They execute application-authored code
-using `new Function` and require CSP `unsafe-eval`; filtering HTML does not make
-this an untrusted-markup sandbox. `baseURL` is an optional absolute same-origin
+using `new Function` and require CSP `unsafe-eval`. HTML patches are not sanitized:
+native handlers, embedded documents, URLs and nested templates are preserved.
+Only pass trusted application-authored HTML and expressions; never user content. `baseURL` is an optional absolute same-origin
 URL; allowed paths match a complete pathname or a pathname segment prefix.
+
+Event expressions compile when their binding is attached and are reused until
+its attributes change or it is disposed. Ordinary rendered attributes and text
+changes do not trigger region rescans; binding attributes and element insertion
+or removal still do.
 
 Only mounted server regions accept element patches. Supply every Solid mount
 as a protected root. Patches targeting those roots, descendants, or ancestors

@@ -14,7 +14,7 @@
     "check": "astro check && npm run check:graph",
     "test:pages": "playwright test --config playwright.pages.config.mjs",
     "test:browser": "playwright test --config playwright.astrok.config.mjs",
-    "verify": "npm run build:packages && npm test && npm run check && npm run build:docs && npm run test:docs:browser && npm run verify:astrok",
+    "verify": "npm run format:check && npm run build:packages && npm test && npm run check && npm run build:docs && npm run test:docs:browser && npm run verify:astrok",
     "graph": "node scripts/graph.ts",
     "index:build": "node scripts/graph.ts build",
     "test:graph": "node --test tests/graph*.ts",
@@ -31,11 +31,14 @@
     "preview:docs": "astro preview",
     "test:docs:browser": "playwright test",
     "audit:design": "node scripts/audit-design-system.mjs",
-    "report:design": "node scripts/collect-design-evidence.mjs"
+    "report:design": "node scripts/collect-design-evidence.mjs",
+    "format": "prettier --write \"packages/runtime/{src,tests}/**/*.ts\" tests/hypermedia-browser.spec.mjs",
+    "format:check": "prettier --check \"packages/runtime/{src,tests}/**/*.ts\" tests/hypermedia-browser.spec.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "7.3.9",
     "@astrojs/starlight": "0.43.1",
+    "@astrok/theme": "0.1.0",
     "@sqlite.org/sqlite-wasm": "3.54.1-build1",
     "astro": "7.4.13",
     "github-slugger": "2.0.0",
@@ -43,8 +46,7 @@
     "remark-parse": "11.0.0",
     "remark-stringify": "11.0.0",
     "unified": "11.0.5",
-    "yaml": "2.9.1",
-    "@astrok/theme": "0.1.0"
+    "yaml": "2.9.1"
   },
   "engines": {
     "node": ">=24.0.0 <25"
@@ -54,6 +56,7 @@
     "@axe-core/playwright": "4.14.0",
     "@playwright/test": "1.65.1",
     "@types/node": "26.6.6",
+    "prettier": "3.10.1",
     "typescript": "6.0.3"
   },
   "workspaces": [
