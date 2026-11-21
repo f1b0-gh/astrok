@@ -41,3 +41,28 @@ test('Pages navigation and source downloads respect the repository prefix', asyn
     expect((await request.get(doc.sourceUrl)).status()).toBe(200);
   }
 });
+
+test('homepage explains Astrok and publishes copyable agent discovery without JavaScript', async ({ browser, baseURL, request, viewport }, testInfo) => {
+  const context = await browser.newContext({javaScriptEnabled: false, viewport});
+  try {
+    const page = await context.newPage();
+    await page.goto(`${baseURL}${base}`);
+    await expect(page.getByRole('heading', {name: 'Astrok', exact: true})).toBeVisible();
+    await expect(page.locator('main')).toContainText('Write your docs once, in Markdown.');
+    await expect(page.getByRole('link', {name: 'installation instructions'})).toHaveAttribute('href', /github.com\/f1b0-gh\/astrok#use-it/);
+    const manifest = await (await request.get(`${base}okf/manifest.json`)).json();
+    await expect(page.locator('main')).toContainText(`${manifest.documents.length} Markdown files`);
+    await expect(page.locator('script')).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({path: testInfo.outputPath('homepage.png'), fullPage: true});
+    await page.goto(`${baseURL}${base}agents/`);
+    const origin = process.env.ASTROK_SITE || 'http://127.0.0.1:4338';
+    await expect(page.locator('[data-agent-prompt]')).toContainText(new URL(`${base}llms.txt`, origin).href);
+    await expect(page.locator('[data-agent-prompt]')).toContainText(new URL(`${base}okf/manifest.json`, origin).href);
+    await expect(page.locator('main')).not.toContainText('<SITE_BASE_URL>');
+    expect((await request.get(`${base}llms.txt`)).ok()).toBe(true);
+    expect((await request.get(`${base}graph/graph.json`)).ok()).toBe(true);
+    expect((await request.get(`${base}graph/knowledge.sqlite`)).status()).toBe(404);
+    for (const dir of ['okf', 'graph']) expect((await request.get(`${base}${dir}/.astrok-owned.json`)).status()).toBe(404);
+  } finally { await context.close(); }
+});
