@@ -7,8 +7,7 @@ description: Run the examples or install Astrok in your own Astro project.
 # Getting started
 
 Astrok combines static Astro pages, optional Solid interactions and Markdown sources that an agent
-can read directly. Start with the included examples; there is no published Astrok package to install
-from npm yet.
+can read directly. Try the included examples or install the npm beta in an existing Astro project.
 
 ## Run the workspace
 
@@ -44,30 +43,16 @@ those source files, not in the generated pages.
 
 ## Use it in your Astro project
 
-Until the first npm release, install from local tarballs. In the Node 24 checkout from
-[Run the workspace](#run-the-workspace):
+Use Node 24. In your Astro project, install the beta packages and Markdown renderer:
 
 ```sh
-npm ci
-npm run build:packages
-mkdir -p artifacts/local
-npm pack ./packages/okf --ignore-scripts --pack-destination artifacts/local
-npm pack ./packages/astro --ignore-scripts --pack-destination artifacts/local
-```
-
-Then install both tarballs together in your existing Astro project. Replace these absolute paths
-with your local paths:
-
-```sh
-ASTROK_PACKAGES=/absolute/path/to/astrok/artifacts/local
-cd /absolute/path/to/your-astro-project
 npm install astro@7.4.13 @astrojs/markdown-remark@7.3.9 \
-  "$ASTROK_PACKAGES/astrokjs-okf-0.1.0-beta.1.tgz" \
-  "$ASTROK_PACKAGES/astrokjs-astro-0.1.0-beta.1.tgz"
+  @astrokjs/astro@0.1.0-beta.1 @astrokjs/okf@0.1.0-beta.1
 ```
 
-Install both together to resolve the internal dependency locally. The setup below uses plain Astro.
-For Starlight, install `@astrojs/starlight@0.43.1` and use the
+These exact versions reproduce the tested setup. The `next` tag tracks the current beta; Astrok
+accepts compatible Astro `^7.4.13` updates. The setup below uses plain Astro. For Starlight, install
+`@astrojs/starlight@0.43.1` and use the
 [Astro config](https://github.com/f1b0-gh/astrok/blob/main/astro.config.mjs) and
 [collection config](https://github.com/f1b0-gh/astrok/blob/main/src/content.config.ts) as
 references.
