@@ -13,7 +13,10 @@ interactive components; a graph index is optional.
 Each site owns its Markdown bundle. `knowledge/` contains the Astrok user guide;
 `examples/workspace/knowledge/` belongs to the workspace demo. The build derives
 pages, raw Markdown, a discovery manifest and, when enabled, JSON/SQLite graphs.
-Generated files are disposable; edits belong in the source bundle.
+Generated files are disposable; edits belong in the source bundle. Ownership
+markers stay beside generated sources but are removed from the resolved Astro
+client output in `astro:build:generated`; only Astrok's own marker copies in
+`okf/` and the enabled `graph/` publication are removed.
 
 Site publication supports `strictLinks: true` to reject resolved-link diagnostics
 before touching generated output. The Astro integration enables it by default;

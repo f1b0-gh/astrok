@@ -54,6 +54,8 @@ try {
   assert.match(page, /href="\/"/);
   assert.doesNotMatch(page, /type: Guide|description: A short/);
   await readFile(path.join(fixture, 'dist/nested/Guide One/index.html'));
+  await assert.rejects(readFile(path.join(fixture, 'dist/okf/.astrok-owned.json')), /ENOENT/);
+  assert.match(await readFile(path.join(fixture, 'public/okf/.astrok-owned.json'), 'utf8'), /@astrok\/okf/);
   const manifestPath = path.join(fixture, 'public/okf/manifest.json');
   const manifest = await readFile(manifestPath, 'utf8');
   await writeFile(topic, invalid);

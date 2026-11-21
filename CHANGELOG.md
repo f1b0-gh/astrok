@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Remove Astrok ownership marker copies from deployed Astro output while
+  retaining generated-source markers for repeat builds. Complete the plain-mode
+  README quickstart with a Markdown renderer, page route and Git ignore guidance.
+
 - **Breaking:** Astro integration setup/build now rejects invalid internal links
   by default, reporting source paths and lines before changing generated output.
   Set `strictLinks: false` for the previous warning-only behavior. Low-level

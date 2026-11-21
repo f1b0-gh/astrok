@@ -212,3 +212,41 @@ test('strict integration reports invalid source edits and recovers without repla
   httpServer.emit('close');
   assert.equal(watcher.listenerCount('all'), 0);
 });
+
+test('build output omits owned markers while retaining source ownership and caller files', async t => {
+  const {okfIntegration} = await import('@astrok/astro');
+  const {cp} = await import('node:fs/promises');
+  const {pathToFileURL} = await import('node:url');
+  for (const graph of [false, true]) {
+    const {root, directory} = await fixture(t);
+    const publicDir = path.join(directory, 'public');
+    const outputDir = path.join(directory, 'custom-output/client');
+    const integration = okfIntegration({root, publicDir, presentation: 'plain', graph});
+    const setup = () => integration.hooks['astro:config:setup']({
+      config: {root: pathToFileURL(directory + '/'), base: '/', publicDir: pathToFileURL(publicDir + '/')},
+      updateConfig() {}, logger: {info() {}, warn() {}},
+    });
+    await setup();
+    await mkdir(path.join(publicDir, 'caller'));
+    await writeFile(path.join(publicDir, 'caller/.astrok-owned.json'), 'caller data');
+    if (!graph) {
+      await mkdir(path.join(publicDir, 'graph'));
+      await writeFile(path.join(publicDir, 'graph/.astrok-owned.json'), 'caller graph');
+    }
+    await cp(publicDir, outputDir, {recursive: true});
+    const finish = () => integration.hooks['astro:build:generated']({dir: pathToFileURL(outputDir + '/')});
+    await finish();
+    await finish(); // Missing copied markers are harmless.
+    for (const name of ['okf', ...(graph ? ['graph'] : [])]) {
+      await assert.rejects(readFile(path.join(outputDir, name, '.astrok-owned.json')), /ENOENT/);
+      assert.match(await readFile(path.join(publicDir, name, '.astrok-owned.json'), 'utf8'), /@astrok\/okf/);
+    }
+    assert.equal(await readFile(path.join(outputDir, 'caller/.astrok-owned.json'), 'utf8'), 'caller data');
+    if (!graph) assert.equal(await readFile(path.join(outputDir, 'graph/.astrok-owned.json'), 'utf8'), 'caller graph');
+    assert.equal(await readFile(path.join(outputDir, 'okf/topic.md'), 'utf8'), source);
+    await setup(); // Original markers still authorize the next generation.
+    await writeFile(path.join(outputDir, 'okf/.astrok-owned.json'), 'different owner');
+    await finish();
+    assert.equal(await readFile(path.join(outputDir, 'okf/.astrok-owned.json'), 'utf8'), 'different owner');
+  }
+});

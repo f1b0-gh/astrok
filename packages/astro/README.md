@@ -32,7 +32,9 @@ Source generation only owns fresh/empty or previously marked directories.
 `publicDir/okf` and `publicDir/graph` must be dedicated generated projections;
 `llms.txt` belongs to the graph publication. Other public assets remain caller
 owned. Preserve `.astrok-owned.json` between generations. The public package does not claim arbitrary populated directories; legacy
-unmarked output must be rebuilt in fresh generated directories.
+unmarked output must be rebuilt in fresh generated directories. Ownership markers
+stay in generated source directories for repeat builds; the integration removes
+its marker copies from the resolved client build output before deployment.
 
 `graph` defaults to false. Set `graph: true` for JSON publication. SQLite is
 also opt-in: set `sqlite: true` or `OKF_SQLITE=1` with graph enabled; an explicit
