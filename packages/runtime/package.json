@@ -23,8 +23,8 @@
     "test": "npm run build && node --conditions=browser tests/runtime.test.ts && node --conditions=browser tests/hypermedia.test.ts && node --conditions=browser tests/sse.test.ts"
   },
   "peerDependencies": {
-    "@solidjs/web": "^2.0.0",
-    "solid-js": "^2.0.0"
+    "@solidjs/web": "^2.0.1",
+    "solid-js": "^2.0.1"
   },
   "optionalDependencies": {
     "morphdom": "2.7.8"

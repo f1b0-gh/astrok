@@ -56,8 +56,8 @@ when restoring the previous valid source.
 Install the optional runtime and compiler dependencies in your Astro project:
 
 ```sh
-npm install solid-js@2.0.0 @solidjs/web@2.0.0
-npm install --save-dev @solidjs/compiler@2.0.0 @solidjs/vite-plugin@3.0.1
+npm install solid-js@2.0.1 @solidjs/web@2.0.1
+npm install --save-dev @solidjs/compiler@2.0.1 @solidjs/vite-plugin@3.0.1
 ```
 
 Add the integration alongside any existing integrations:

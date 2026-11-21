@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Update the workspace Solid runtime, renderer and compiler to 2.0.1, and raise the Solid peer
+  minimums to ^2.0.1 for the next package release.
+
 ## 0.1.0-beta.1 — 2026-11-21
 
 First npm prerelease under the `next` tag.
