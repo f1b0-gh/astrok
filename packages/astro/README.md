@@ -1,5 +1,9 @@
 # @astrokjs/astro
 
+Supports Astro `^7.4.13` and, when enabled, Starlight `^0.43.1`.
+The workspace pins exact versions for reproducible tests; consumers can install
+compatible updates within these peer ranges.
+
 `okfIntegration(options?)` publishes canonical OKF sources, a metadata manifest and
 optional graph artifacts during Astro setup and source edits. Configuration uses
 Zod 4.6.7 to report invalid paths, flags and unknown options before generation.
