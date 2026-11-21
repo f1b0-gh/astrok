@@ -54,14 +54,63 @@ function merge(target: Record<string, unknown>, patch: SignalPatch, onlyIfMissin
 
 export interface SharedState<T extends Record<string, unknown>> {
   readonly state: T;
+  /** Available only for independently validated field state. */
+  updateField?: <K extends keyof T & string>(key: K, recipe: (value: T[K]) => T[K]) => void;
   update(recipe: (draft: T) => void): void;
   patch(input: unknown, onlyIfMissing?: boolean): void;
   dispose(): void;
 }
+export type FieldDecoders<T extends Record<string, unknown>> = {
+  readonly [K in keyof T]-?: (input: unknown) => T[K];
+};
+export interface FieldState<T extends Record<string, unknown>> extends SharedState<T> {
+  updateField<K extends keyof T & string>(key: K, recipe: (value: T[K]) => T[K]): void;
+}
+
+/** Opt-in fixed fields: each decoder validates its own branch, with no cross-field invariants. */
+export function createFieldState<T extends Record<string, unknown>>(
+  initial: T,
+  decoders: FieldDecoders<NoInfer<T>>,
+): FieldState<T> {
+  const fields = new Map<string, (input: unknown) => unknown>();
+  for (const [key, decode] of Object.entries(decoders)) {
+    if (blocked.has(key) || typeof decode !== 'function')
+      throw new Error(`Invalid field decoder: ${key}`);
+    fields.set(key, decode as (input: unknown) => unknown);
+  }
+  const decodeField = (key: string, input: unknown) => {
+    const decode = fields.get(key);
+    if (!decode) throw new Error(`Unknown state field: ${key}`);
+    return decode(input);
+  };
+  const decodeAll = (input: unknown): T => {
+    if (!isObject(input)) throw new Error('Expected a JSON object state');
+    for (const key of Object.keys(input)) {
+      if (!fields.has(key)) throw new Error(`Unknown state field: ${key}`);
+    }
+    const result: Record<string, unknown> = {};
+    for (const key of fields.keys()) {
+      if (!Object.hasOwn(input, key)) throw new Error(`Missing state field: ${key}`);
+      result[key] = decodeField(key, input[key]);
+    }
+    return result as T;
+  };
+  // The internal factory installs updateField whenever a field decoder is provided.
+  return createValidatedState(initial, decodeAll, decodeField) as FieldState<T>;
+}
+
 /** The decoder validates the complete candidate; its output becomes stored state. */
 export function createSharedState<T extends Record<string, unknown>>(
   initial: T,
   decode: (input: unknown) => T,
+): SharedState<T> {
+  return createValidatedState(initial, decode);
+}
+
+function createValidatedState<T extends Record<string, unknown>>(
+  initial: T,
+  decode: (input: unknown) => T,
+  decodeField?: (key: string, input: unknown) => unknown,
 ): SharedState<T> {
   const decoded = (input: unknown): T => {
     validatePatch(input);
@@ -70,6 +119,7 @@ export function createSharedState<T extends Record<string, unknown>>(
     return structuredClone(value);
   };
   const accepted = decoded(initial);
+  const fieldKeys = decodeField ? new Set(Object.keys(accepted)) : undefined;
   let disposed = false;
   let disposeRoot: () => void = () => {};
   const parent = getOwner();
@@ -93,6 +143,11 @@ export function createSharedState<T extends Record<string, unknown>>(
     patch(input, onlyIfMissing = false) {
       assertActive();
       const patch = validatePatch(input);
+      if (fieldKeys) {
+        for (const key of Object.keys(patch)) {
+          if (!fieldKeys.has(key)) throw new Error(`Unknown state field: ${key}`);
+        }
+      }
       setState((draft) => {
         const candidate = structuredClone(snapshot(draft));
         merge(candidate, patch, onlyIfMissing);
@@ -105,6 +160,19 @@ export function createSharedState<T extends Record<string, unknown>>(
       disposeRoot();
     },
   };
+  if (decodeField) {
+    shared.updateField = (key, recipe) => {
+      assertActive();
+      setState((draft) => {
+        if (!fieldKeys!.has(key)) throw new Error(`Unknown state field: ${key}`);
+        const candidate = recipe(structuredClone(snapshot(draft[key])));
+        validatePatch({ [key]: candidate });
+        const value = decodeField(key, candidate);
+        validatePatch({ [key]: value });
+        draft[key] = structuredClone(value) as T[typeof key];
+      });
+    };
+  }
   if (parent) onCleanup(shared.dispose);
   return shared;
 }

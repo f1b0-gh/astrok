@@ -45,11 +45,16 @@ are tested with an enforced `script-src 'self'` policy, without `unsafe-eval` or
 `unsafe-inline`. CSP configuration for other Astro features remains the site's
 responsibility. Render-only mutations do not rescan the region.
 
-Shared-state updates validate the complete candidate and decoder output before
+`createSharedState` validates the complete candidate and decoder output before
 committing, including cross-field invariants and schema transformations. This
-is proportional to total state size. Large independent data should use separate
-stores. A future field-update API must specify validation scope and atomicity;
-this review does not weaken the existing guarantee to optimize keystrokes.
+remains proportional to total state size. `createFieldState` is an explicit
+alternative for a fixed set of independently validated root fields; it cannot
+enforce cross-field invariants. Its `updateField` copies, validates and replaces
+only the selected branch. Hypermedia `data-bind` uses that capability when
+available, so a small form edit does not traverse an unrelated large dataset.
+Nested bindings pay for their containing root field. Full `update`/`patch` and
+event/effect handlers retain whole-state atomic validation. Both APIs preserve
+pending-write ordering, decoder-output isolation and owner cleanup.
 
 Package exports are the integration boundary for repository scripts and tests.
 There are no forwarding trees or legacy output-adoption layer. Adapted runtime

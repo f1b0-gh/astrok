@@ -46,6 +46,6 @@ publish npm packages.
 
 Hypermedia now requires registered callbacks in place of executable attributes;
 include this breaking migration and the removal of `compileAttribute` in release
-notes. It works without CSP `unsafe-eval` and still requires trusted HTML. State updates validate whole candidates;
-no constant-time update guarantee is made. Include changes to these contracts in
+notes. It works without CSP `unsafe-eval` and still requires trusted HTML. Whole-state updates validate complete candidates; opt-in field updates
+validate only the selected branch and provide no cross-field invariants. Include changes to these contracts in
 release notes. Keep build output and tarballs out of Git.

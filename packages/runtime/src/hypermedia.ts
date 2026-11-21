@@ -107,6 +107,16 @@ export function createHypermedia<T extends Record<string, unknown>>(
       handler.run(draft, actions(el), el, evt);
     });
   };
+  function updateBoundValue(path: string, value: unknown) {
+    if (shared.updateField) {
+      const field = pathParts(path)[0]! as keyof T & string;
+      shared.updateField(field, (current) => {
+        const branch: Record<string, unknown> = { [field]: current };
+        writePath(branch, path, value);
+        return branch[field] as T[typeof field];
+      });
+    } else shared.update((state) => writePath(state, path, value));
+  }
   function bind(el: Element, attributes: Attr[], previous?: Map<string, string>) {
     // Initialize outside reactive owners; subsequent writes run in event/effect apply phases.
     for (const attr of attributes) {
@@ -167,7 +177,7 @@ export function createHypermedia<T extends Record<string, unknown>>(
               const update = () => {
                 try {
                   const value = inputValue(input);
-                  shared.update((s) => writePath(s, path, value));
+                  updateBoundValue(path, value);
                 } catch (error) {
                   report(error);
                 }

@@ -43,11 +43,42 @@ schema transforms. Invalid changes leave the state unchanged; deleting a require
 field fails validation. Use optional fields for deletable properties, and an open
 record decoder for deliberately dynamic state. The decoder need not use Zod.
 
-Validation, cloning and reconciliation visit the complete state on each update.
-Keep large independent datasets in separate stores; this API does not promise
-constant-time field writes. Number inputs produce numbers or `null` when cleared; use a nullable decoder if clearing
-is allowed. Invalid input or rejected state is reported through `onError` and
-leaves the accepted state unchanged.
+`createSharedState` validates, clones and reconciles the complete state on every
+write. Keep it for cross-field invariants. Number inputs produce numbers or `null`
+when cleared; use a nullable decoder if clearing is allowed. Invalid input or
+rejected state is reported through `onError` and leaves accepted state unchanged.
+
+For independent fields next to a large dataset, opt into `createFieldState`:
+
+```ts
+import { createFieldState } from '@astrok/runtime';
+
+const fields = createFieldState({ note: '', rows: [] as string[] }, {
+  note: z.string().max(200).parse,
+  rows: z.array(z.string()).parse,
+});
+fields.updateField('note', note => note + '!');
+// <input data-bind="note"> also uses this field-only path when mounted with fields.
+```
+
+Each root field has its own decoder; all declared fields must be present and
+unknown fields are rejected. Decoder definitions are snapshotted at creation.
+There is no cross-field validation in this API. Use `createSharedState` when one
+field's validity depends on another.
+
+`updateField(key, recipe)` receives an isolated copy of the current field,
+including pending writes, and must synchronously return its new value. The
+candidate and decoded output are checked before replacing that branch. A rejected
+write leaves all fields unchanged. Other root fields are neither copied nor
+decoded, so editing `note` does not visit `rows`. Nested bindings such as
+`data-bind="form.note"` copy and validate the containing `form` branch. Put large
+independent datasets in separate root fields or stores.
+
+Full `update`/`patch` and hypermedia event/effect handlers still validate the whole
+candidate atomically. Merge-patch `null` deletes a field and therefore cannot
+remove a required root field; `updateField` can store `null` if its decoder accepts
+it. Field updates cost time proportional to the selected branch and its decoder,
+not total state size. Unmount and disposal retain the same ownership rules.
 
 `readPatches(response, signal, { signals, elements? }, options?)` handles JSON,
 trusted HTML, and the Datastar `datastar-patch-signals` / `datastar-patch-elements`

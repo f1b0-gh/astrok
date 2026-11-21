@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { flush, createRoot } from 'solid-js';
 import { z } from 'zod';
-import { createSharedState } from '../dist/state.js';
+import { createFieldState, createSharedState } from '../dist/state.js';
 import { createLatestRequest } from '../dist/request.js';
 import { readPatches } from '../dist/sse.js';
 
@@ -440,5 +440,118 @@ test('HTML and SSE element modes are decoded without accepting unsupported value
         assert.deepEqual(seen, [{ elements: '<p>ok</p>', selector: '#out', mode }]);
       }
     }
+  }
+});
+
+test('field writes copy and decode only the selected branch', () => {
+  let rowsDecodes = 0;
+  const shared = createFieldState(
+    { note: '', rows: Array.from({ length: 2000 }, (_, id) => ({ id })) },
+    {
+      note: (input) => String(input),
+      rows: (input) => {
+        rowsDecodes++;
+        return input as { id: number }[];
+      },
+    },
+  );
+  const originalClone = globalThis.structuredClone;
+  const cloned: unknown[] = [];
+  globalThis.structuredClone = ((value: unknown) => {
+    cloned.push(value);
+    return originalClone(value);
+  }) as typeof structuredClone;
+  try {
+    const rows = shared.state.rows;
+    for (let i = 0; i < 20; i++) shared.updateField('note', (note) => note + '.');
+    flush();
+    assert.equal(shared.state.note.length, 20);
+    assert.equal(shared.state.rows, rows);
+    assert.equal(rowsDecodes, 1);
+    assert.ok(cloned.length > 0);
+    assert.ok(
+      cloned.every((value) => typeof value === 'string'),
+      'only the scalar field may be cloned',
+    );
+  } finally {
+    globalThis.structuredClone = originalClone;
+    shared.dispose();
+  }
+});
+
+test('field state keeps mixed batched updates atomic and isolates decoder outputs', () => {
+  const transformed = { value: 0 };
+  const shared = createFieldState(
+    { count: 0, nested: { value: 0 } },
+    {
+      count: (input) => {
+        if (typeof input !== 'number' || input < 0) throw new Error('Nonnegative count required');
+        return input;
+      },
+      nested: (input) => {
+        transformed.value = (input as { value: number }).value;
+        return transformed;
+      },
+    },
+  );
+  try {
+    shared.updateField('count', (n) => n + 1);
+    shared.update((state) => {
+      state.count++;
+    });
+    shared.updateField('count', (n) => n + 1);
+    shared.patch({ nested: { value: 4 } });
+    shared.updateField('nested', (value) => {
+      value.value++;
+      return value;
+    });
+    transformed.value = 99;
+    assert.throws(() => shared.updateField('count', () => -1), /Nonnegative/);
+    assert.throws(
+      () =>
+        shared.update((state) => {
+          state.nested.value = 8;
+          state.count = -1;
+        }),
+      /Nonnegative/,
+    );
+    flush();
+    assert.equal(shared.state.count, 3);
+    assert.equal(shared.state.nested.value, 5);
+    assert.throws(() => shared.updateField('count', () => NaN), /finite/);
+    assert.throws(() => shared.updateField('nested', () => ({ value: Infinity })), /finite/);
+    assert.throws(() => shared.patch({ count: null }), /Missing state field/);
+    assert.throws(() => shared.patch({ unknown: 1 }), /Unknown state field/);
+    assert.throws(() => shared.patch({ unknown: null }), /Unknown state field/);
+    assert.throws(() => shared.patch({ unknown: null }, true), /Unknown state field/);
+    assert.throws(
+      () => shared.updateField('unknown' as never, () => 1 as never),
+      /Unknown state field/,
+    );
+    flush();
+    assert.equal(shared.state.count, 3);
+    assert.equal(shared.state.nested.value, 5);
+  } finally {
+    shared.dispose();
+  }
+  assert.throws(() => shared.updateField('count', () => 0), /disposed/);
+});
+
+test('field decoder definitions are snapshotted and outputs remain JSON-safe', () => {
+  const decoders = { value: (input: unknown) => Number(input) };
+  const shared = createFieldState({ value: 1 }, decoders);
+  decoders.value = () => NaN;
+  try {
+    shared.updateField('value', () => 2);
+    flush();
+    assert.equal(shared.state.value, 2);
+    assert.throws(() => createFieldState({ value: 1 }, decoders), /finite/);
+    assert.throws(
+      () => createFieldState({ value: 1 }, { value: 'bad' } as never),
+      /Invalid field decoder/,
+    );
+    assert.throws(() => createFieldState({ value: 1 }, {} as never), /Unknown state field/);
+  } finally {
+    shared.dispose();
   }
 });

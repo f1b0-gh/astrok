@@ -1,5 +1,5 @@
-export { createSharedState } from './state.js';
-export type { SharedState, SignalPatch } from './state.js';
+export { createFieldState, createSharedState } from './state.js';
+export type { SharedState, FieldState, FieldDecoders, SignalPatch } from './state.js';
 export { createLatestRequest } from './request.js';
 export type { LatestRequest, LatestRequestOptions, RequestState } from './request.js';
 export { readPatches } from './sse.js';

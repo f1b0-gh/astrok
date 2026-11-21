@@ -72,7 +72,7 @@ try {
   await run('npm', ['run', 'build'], consumer);
   await writeFile(path.join(consumer, 'contracts.ts'), `import {parseSource, readMetadata} from '@astrok/okf';
 import {okfIntegration} from '@astrok/astro';
-import {createSharedState, type ElementPatch, type SharedState, type RequestState} from '@astrok/runtime';
+import {createFieldState, createSharedState, type ElementPatch, type SharedState, type RequestState} from '@astrok/runtime';
 import {createHypermedia, type HypermediaHandler} from '@astrok/runtime/hypermedia';
 // @ts-expect-error Executable attribute compilation is no longer a public API.
 import {compileAttribute} from '@astrok/runtime/hypermedia';
@@ -92,6 +92,15 @@ createHypermedia(shared, {allowedPaths: [], handlers: {
 }});
 const handler: HypermediaHandler<{count: number}> = {run: state => state.count};
 const patch: ElementPatch = {elements: '<p>ok</p>', selector: undefined, mode: undefined};
+const fields = createFieldState({note: '', count: 0}, {note: String, count: Number});
+fields.updateField('note', note => note.trim());
+fields.updateField('count', count => count + 1);
+// @ts-expect-error Field keys must belong to the declared state.
+fields.updateField('missing', () => 1);
+// @ts-expect-error Field recipes must return the field type.
+fields.updateField('count', () => 'wrong');
+// @ts-expect-error Each field needs its own decoder.
+createFieldState({note: '', count: 0}, {count: Number});
 import {KnowledgeGraph} from '@astrok/okf/graph';
 const document = parseSource('---\\ntype: Future\\n---\\nBody','topic.md');
 const state = readMetadata({verified: {by: 'human:reviewer', at: '2026-11-20'}});

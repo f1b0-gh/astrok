@@ -19,7 +19,7 @@ test.beforeAll(async () => {
         resolveId: (id) => (id === entry ? entry : undefined),
         load: (id) =>
           id === entry
-            ? 'export {createHypermedia} from "@astrok/runtime/hypermedia"; export {createSharedState} from "@astrok/runtime"; export {flush} from "solid-js";'
+            ? 'export {createHypermedia} from "@astrok/runtime/hypermedia"; export {createFieldState, createSharedState} from "@astrok/runtime"; export {flush} from "solid-js";'
             : undefined,
       },
     ],
@@ -441,5 +441,84 @@ test('effects require explicit watch keys and ignore unrelated state changes', a
     changed: 2,
     disposed: 2,
     initialRuns: 1,
+  });
+});
+
+test('field-backed input edits leave large independent data untouched', async ({ page }) => {
+  const result = await page.evaluate(async () => {
+    const { createFieldState, createHypermedia, flush } = await import('/__hypermedia_test__.js');
+    let rowsDecodes = 0;
+    const shared = createFieldState(
+      { form: { note: '' }, amount: 2, rows: Array.from({ length: 2000 }, (_, id) => ({ id })) },
+      {
+        form: (value) => {
+          if (typeof value.note !== 'string' || value.note.length > 5)
+            throw new Error('Note too long');
+          return value;
+        },
+        amount: (value) => {
+          if (value !== null && (typeof value !== 'number' || value < 0))
+            throw new Error('Invalid amount');
+          return value;
+        },
+        rows: (value) => {
+          rowsDecodes++;
+          return value;
+        },
+      },
+    );
+    const root = document.createElement('section');
+    root.innerHTML =
+      '<input id="field-note" data-bind="form.note"><input id="field-amount" type="number" data-bind="amount">';
+    document.body.append(root);
+    const errors = [];
+    const html = createHypermedia(shared, {
+      allowedPaths: [],
+      onError: (error) => errors.push(error.message),
+    });
+    try {
+      const unmount = html.mount(root);
+      flush();
+      const rows = shared.state.rows;
+      const note = root.querySelector('#field-note');
+      const amount = root.querySelector('#field-amount');
+      for (const text of ['a', 'ab', 'abc', 'abcdef']) {
+        note.value = text;
+        note.dispatchEvent(new Event('input'));
+      }
+      amount.value = '';
+      amount.dispatchEvent(new Event('input'));
+      flush();
+      const cleared = shared.state.amount;
+      for (const value of ['7', '9', '7', '-1']) {
+        amount.value = value;
+        amount.dispatchEvent(new Event('input'));
+      }
+      flush();
+      unmount();
+      note.value = 'after';
+      note.dispatchEvent(new Event('input'));
+      flush();
+      return {
+        note: shared.state.form.note,
+        amount: shared.state.amount,
+        cleared,
+        rowsDecodes,
+        sameRows: rows === shared.state.rows,
+        errors,
+      };
+    } finally {
+      html.dispose();
+      shared.dispose();
+      root.remove();
+    }
+  });
+  expect(result).toEqual({
+    note: 'abc',
+    amount: 7,
+    cleared: null,
+    rowsDecodes: 1,
+    sameRows: true,
+    errors: ['Note too long', 'Invalid amount'],
   });
 });

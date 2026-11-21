@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add opt-in `createFieldState` with independently validated root fields.
+  `updateField` and its `data-bind` path copy and validate only the changed
+  branch, avoiding work on unrelated large datasets. The existing whole-state
+  API retains cross-field validation and atomic updates.
+
 - **Breaking:** replace executable hypermedia attributes with typed, registered
   JavaScript handlers. Effects declare their watched state keys. Remove
   `compileAttribute`, its expression types and the runtime Acorn/Zod dependencies;
