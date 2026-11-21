@@ -18,18 +18,28 @@ export function inspectMarkdown(body) {
   const headings = [];
   const links = [];
   const definitions = new Map();
-  walk(tree, node => {
+  walk(tree, (node) => {
     if (node.type === 'definition') definitions.set(node.identifier, node.url);
   });
   let sourceFragment = null;
-  walk(tree, node => {
+  walk(tree, (node) => {
     if (node.type === 'heading') {
       sourceFragment = slugger.slug(textContent(node));
       headings.push(sourceFragment);
     }
-    const href = node.type === 'link' || node.type === 'image' ? node.url
-      : node.type === 'linkReference' || node.type === 'imageReference' ? definitions.get(node.identifier) : null;
-    if (href != null) links.push({ href, sourceFragment, line: node.position?.start.line, column: node.position?.start.column });
+    const href =
+      node.type === 'link' || node.type === 'image'
+        ? node.url
+        : node.type === 'linkReference' || node.type === 'imageReference'
+          ? definitions.get(node.identifier)
+          : null;
+    if (href != null)
+      links.push({
+        href,
+        sourceFragment,
+        line: node.position?.start.line,
+        column: node.position?.start.column,
+      });
   });
   return { tree, headings, links };
 }

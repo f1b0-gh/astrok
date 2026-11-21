@@ -2,7 +2,11 @@ import { test, expect } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 
 const base = process.env.ASTROK_BASE || '/';
-test('static documentation and agent source work without JavaScript', async ({ browser, request, baseURL }) => {
+test('static documentation and agent source work without JavaScript', async ({
+  browser,
+  request,
+  baseURL,
+}) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto(`${baseURL}${base}`);
@@ -11,7 +15,9 @@ test('static documentation and agent source work without JavaScript', async ({ b
   await expect(page.getByRole('heading', { name: 'Workspace guide' })).toBeVisible();
   await expect(page.locator('body')).not.toContainText('type: Guide');
   const manifest = await (await request.get(`${base}okf/manifest.json`)).json();
-  expect(manifest.documents.find(row => row.path === 'guide.md').metadata.future).toEqual({ nested: { retained: true } });
+  expect(manifest.documents.find((row) => row.path === 'guide.md').metadata.future).toEqual({
+    nested: { retained: true },
+  });
   for (const row of manifest.documents) {
     expect((await request.get(row.sourceUrl)).ok()).toBeTruthy();
     expect((await request.get(row.url)).ok()).toBeTruthy();
@@ -19,9 +25,13 @@ test('static documentation and agent source work without JavaScript', async ({ b
   await context.close();
 });
 
-test('shared controls, stream, table, request replacement and instance isolation', async ({ page }) => {
+test('shared controls, stream, table, request replacement and instance isolation', async ({
+  page,
+}) => {
   const rowRequests = [];
-  page.on('request', request => { if (new URL(request.url()).pathname === `${base}api/rows`) rowRequests.push(request.url()); });
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === `${base}api/rows`) rowRequests.push(request.url());
+  });
   await page.goto(`${base}workspace/`);
   const first = page.locator('[data-workspace="first"]');
   const second = page.locator('[data-workspace="second"]');
@@ -63,7 +73,9 @@ test('disposal, remount and morph boundaries retain one live owner', async ({ pa
   await expect(first.getByRole('alert')).toContainText('protected');
   await expect(first.getByRole('button', { name: 'Load rows' })).toBeVisible();
   await first.getByLabel('Panel note').fill('Keep my draft');
-  await first.getByRole('button', { name: 'Stream summary' }).evaluate(button => { if (button instanceof HTMLButtonElement) button.click(); });
+  await first.getByRole('button', { name: 'Stream summary' }).evaluate((button) => {
+    if (button instanceof HTMLButtonElement) button.click();
+  });
   await expect(first.locator('[data-fragment-message]')).toHaveText('Server fragment updated');
   await expect(first.getByLabel('Panel note')).toBeFocused();
   await expect(first.getByLabel('Panel note')).toHaveValue('Keep my draft');
@@ -73,14 +85,16 @@ test('disposal, remount and morph boundaries retain one live owner', async ({ pa
     return value;
   });
   await page.getByRole('link', { name: 'Alternate workspace', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Alternate workspace', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Alternate workspace', exact: true }),
+  ).toBeVisible();
   expect(await page.evaluate(() => Reflect.get(window, '__astrokNavigationTest'))).toBe(token);
   await expect(first.locator('[data-clicks]')).toHaveText('0');
   await first.getByRole('button', { name: 'Count click' }).click();
   await expect(first.locator('[data-clicks]')).toHaveText('1');
   await page.getByRole('link', { name: 'astrok home', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Astrok', exact: true })).toBeVisible();
-  await page.getByRole('navigation', {name: 'Main'}).getByText('Demos', {exact: true}).click();
+  await page.getByRole('navigation', { name: 'Main' }).getByText('Demos', { exact: true }).click();
   await page.getByRole('link', { name: 'Workspace', exact: true }).click();
   await expect(first.locator('[data-clicks]')).toHaveText('0');
 });
@@ -93,55 +107,86 @@ test('fixture validates routes and preserves exact integer payloads', async ({ r
   expect(rows.rows[0].id).toBe('18446744073709551000');
 });
 
-test('static reading loads no scripts and data requests stay on demand', async ({ page }, testInfo) => {
+test('static reading loads no scripts and data requests stay on demand', async ({
+  page,
+}, testInfo) => {
   const scripts = [];
   const bodies = [];
   const api = [];
-  page.on('request', request => { if (new URL(request.url()).pathname.startsWith(`${base}api/`)) api.push(request.url()); });
-  page.on('response', response => {
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname.startsWith(`${base}api/`)) api.push(request.url());
+  });
+  page.on('response', (response) => {
     if (response.request().resourceType() === 'script') {
       scripts.push(response.url());
-      bodies.push(response.body().then(bytes => bytes.length));
+      bodies.push(response.body().then((bytes) => bytes.length));
     }
   });
   await page.goto(base);
   await expect(page.getByRole('heading', { name: 'Astrok', exact: true })).toBeVisible();
   expect(scripts).toHaveLength(0);
-  await page.getByRole('navigation', {name: 'Main'}).getByText('Demos', {exact: true}).click();
+  await page.getByRole('navigation', { name: 'Main' }).getByText('Demos', { exact: true }).click();
   await page.getByRole('link', { name: 'Workspace', exact: true }).click();
   await expect(page.locator('[data-workspace="first"] [data-summary]')).toHaveText('Before mount');
   expect(api).toHaveLength(0);
   const sizes = await Promise.all(bodies);
-  const metrics = { base, project: testInfo.project.name, scripts: scripts.length, decodedJavaScriptBytes: sizes.reduce((sum, value) => sum + value, 0), initialDataRequests: api.length };
+  const metrics = {
+    base,
+    project: testInfo.project.name,
+    scripts: scripts.length,
+    decodedJavaScriptBytes: sizes.reduce((sum, value) => sum + value, 0),
+    initialDataRequests: api.length,
+  };
   await writeFile(testInfo.outputPath('payload.json'), JSON.stringify(metrics, null, 2) + '\n');
-  await testInfo.attach('payload', { body: JSON.stringify(metrics), contentType: 'application/json' });
+  await testInfo.attach('payload', {
+    body: JSON.stringify(metrics),
+    contentType: 'application/json',
+  });
 });
 
-test('stale hypermedia unmount preserves a remount and final disposal stops observation', async ({ page }) => {
+test('stale hypermedia unmount preserves a remount and final disposal stops observation', async ({
+  page,
+}) => {
   const { build } = await import('vite');
   const { fileURLToPath } = await import('node:url');
   const path = await import('node:path');
-  const root = process.env.ASTROK_CONSUMER || fileURLToPath(new URL('../examples/workspace/', import.meta.url));
+  const root =
+    process.env.ASTROK_CONSUMER ||
+    fileURLToPath(new URL('../examples/workspace/', import.meta.url));
   const entry = path.join(root, '__astrok_lifecycle_test__.js');
   // Resolve public entrypoints from the selected consumer, including its tarballs.
   const result = await build({
-    root, configFile: false, logLevel: 'silent',
-    plugins: [{
-      name: 'astrok-lifecycle-test-entry',
-      resolveId(id) { if (id === entry) return entry; },
-      load(id) { if (id === entry) return 'export {createHypermedia} from "@astrokjs/runtime/hypermedia"; export {createSharedState} from "@astrokjs/runtime";'; },
-    }],
+    root,
+    configFile: false,
+    logLevel: 'silent',
+    plugins: [
+      {
+        name: 'astrok-lifecycle-test-entry',
+        resolveId(id) {
+          if (id === entry) return entry;
+        },
+        load(id) {
+          if (id === entry)
+            return 'export {createHypermedia} from "@astrokjs/runtime/hypermedia"; export {createSharedState} from "@astrokjs/runtime";';
+        },
+      },
+    ],
     build: { write: false, lib: { entry, formats: ['es'] } },
   });
   const outputs = Array.isArray(result) ? result : [result];
-  const module = outputs.flatMap(output => output.output).find(output => output.type === 'chunk' && output.isEntry);
+  const module = outputs
+    .flatMap((output) => output.output)
+    .find((output) => output.type === 'chunk' && output.isEntry);
   expect(module).toBeTruthy();
-  await page.route('**/__astrok_lifecycle_test__.js', route => route.fulfill({ contentType: 'text/javascript', body: module.code }));
+  await page.route('**/__astrok_lifecycle_test__.js', (route) =>
+    route.fulfill({ contentType: 'text/javascript', body: module.code }),
+  );
   await page.goto(base);
   const observed = await page.evaluate(async () => {
     const { createHypermedia, createSharedState } = await import('/__astrok_lifecycle_test__.js');
-    const shared = createSharedState({ clicks: 0 }, input => {
-      if (!input || typeof input !== 'object' || typeof input.clicks !== 'number') throw new Error('Invalid click count');
+    const shared = createSharedState({ clicks: 0 }, (input) => {
+      if (!input || typeof input !== 'object' || typeof input.clicks !== 'number')
+        throw new Error('Invalid click count');
       return { clicks: input.clicks };
     });
     const root = document.createElement('section');
@@ -151,9 +196,23 @@ test('stale hypermedia unmount preserves a remount and final disposal stops obse
     let callbacks = 0;
     // Keep the real browser observer; count deliveries to detect orphaned observers.
     window.MutationObserver = class extends NativeMutationObserver {
-      constructor(callback) { super((records, observer) => { callbacks++; callback(records, observer); }); }
+      constructor(callback) {
+        super((records, observer) => {
+          callbacks++;
+          callback(records, observer);
+        });
+      }
     };
-    const hypermedia = createHypermedia(shared, { allowedPaths: [], handlers: { increment: { run: (state) => { state.clicks++; } } } });
+    const hypermedia = createHypermedia(shared, {
+      allowedPaths: [],
+      handlers: {
+        increment: {
+          run: (state) => {
+            state.clicks++;
+          },
+        },
+      },
+    });
     try {
       const staleUnmount = hypermedia.mount(root);
       staleUnmount();
@@ -164,16 +223,21 @@ test('stale hypermedia unmount preserves a remount and final disposal stops obse
       const added = document.createElement('button');
       added.setAttribute('data-on:click', 'increment');
       root.append(added);
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
       added.click();
       const afterAddedControl = shared.state.clicks;
       hypermedia.dispose();
       const beforeDisposedMutation = callbacks;
       root.append(document.createElement('span'));
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
       root.querySelector('button').click();
       added.click();
-      return { afterStaleUnmount, afterAddedControl, afterDisposal: shared.state.clicks, callbacksAfterDisposal: callbacks - beforeDisposedMutation };
+      return {
+        afterStaleUnmount,
+        afterAddedControl,
+        afterDisposal: shared.state.clicks,
+        callbacksAfterDisposal: callbacks - beforeDisposedMutation,
+      };
     } finally {
       hypermedia.dispose();
       shared.dispose();
@@ -181,17 +245,32 @@ test('stale hypermedia unmount preserves a remount and final disposal stops obse
       root.remove();
     }
   });
-  expect(observed).toEqual({ afterStaleUnmount: 1, afterAddedControl: 2, afterDisposal: 2, callbacksAfterDisposal: 0 });
+  expect(observed).toEqual({
+    afterStaleUnmount: 1,
+    afterAddedControl: 2,
+    afterDisposal: 2,
+    callbacksAfterDisposal: 0,
+  });
 });
 
-test('AI agents page is discoverable without scripts and exposes canonical sources', async ({ browser, request, baseURL, viewport }) => {
+test('AI agents page is discoverable without scripts and exposes canonical sources', async ({
+  browser,
+  request,
+  baseURL,
+  viewport,
+}) => {
   const context = await browser.newContext({ javaScriptEnabled: false, viewport });
   const page = await context.newPage();
   await page.goto(`${baseURL}${base}`);
-  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'AI agents', exact: true }).click();
+  await page
+    .getByRole('navigation', { name: 'Main' })
+    .getByRole('link', { name: 'AI agents', exact: true })
+    .click();
   await expect(page).toHaveURL(`${baseURL}${base}agents/`);
   await expect(page.getByRole('heading', { name: 'For AI agents', exact: true })).toBeVisible();
-  await expect(page.locator('[data-agent-prompt]')).toContainText(new URL(`${base}okf/manifest.json`, process.env.ASTROK_SITE || 'http://127.0.0.1:4338').href);
+  await expect(page.locator('[data-agent-prompt]')).toContainText(
+    new URL(`${base}okf/manifest.json`, process.env.ASTROK_SITE || 'http://127.0.0.1:4338').href,
+  );
   expect((await request.get(`${base}llms.txt`)).ok()).toBe(true);
   expect((await request.get(`${base}graph/graph.json`)).ok()).toBe(true);
   expect((await request.get(`${base}graph/knowledge.sqlite`)).status()).toBe(404);
@@ -203,10 +282,15 @@ test('AI agents page is discoverable without scripts and exposes canonical sourc
   expect(markdown.ok()).toBe(true);
   expect(await markdown.text()).toContain('title: For AI agents');
   const manifest = await (await request.get(`${base}okf/manifest.json`)).json();
-  expect(manifest.documents.find(document => document.id === 'agents')).toMatchObject({
-    path: 'agents.md', url: `${base}agents/`, sourceUrl: `${base}okf/agents.md`, type: 'Guide',
+  expect(manifest.documents.find((document) => document.id === 'agents')).toMatchObject({
+    path: 'agents.md',
+    url: `${base}agents/`,
+    sourceUrl: `${base}okf/agents.md`,
+    type: 'Guide',
   });
-  for (const href of await page.locator('main a').evaluateAll(links => links.map(link => link.getAttribute('href')))) {
+  for (const href of await page
+    .locator('main a')
+    .evaluateAll((links) => links.map((link) => link.getAttribute('href')))) {
     if (href?.startsWith(base)) expect((await request.get(href)).ok()).toBe(true);
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);

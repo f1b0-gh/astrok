@@ -8,7 +8,10 @@ export default defineConfig({
   base: process.env.ASTROK_BASE || '/',
   trailingSlash: 'always',
   publicDir: '.generated/public',
-  integrations: [solidIntegration(), okfIntegration({ presentation: 'plain', graph: true, sqlite: false })],
+  integrations: [
+    solidIntegration(),
+    okfIntegration({ presentation: 'plain', graph: true, sqlite: false }),
+  ],
   vite: {
     resolve: { dedupe: ['solid-js', '@solidjs/web', '@solidjs/signals'] },
   },

@@ -8,8 +8,8 @@ graph_kind: event
 
 # Refresh requested
 
-The fictional flow requests a refresh after [token expiry](token-expired.md).
-Follow `previous_step` to find that earlier event; the graph derives this reverse
-direction from the `next_step` relationship on the expiry page.
+The fictional flow requests a refresh after [token expiry](token-expired.md). Follow `previous_step`
+to find that earlier event; the graph derives this reverse direction from the `next_step`
+relationship on the expiry page.
 
 No refresh request is executed by this documentation.

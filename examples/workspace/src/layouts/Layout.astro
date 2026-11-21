@@ -3,35 +3,51 @@ import '../styles.css';
 import darkMark from '@astrokjs/theme/logos/astrok-mark-dark.svg?url';
 import inkMark from '@astrokjs/theme/logos/astrok-mark-ink.svg?url';
 import appIcon from '@astrokjs/theme/logos/astrok-app-icon.svg?url';
-interface Props { title: string; theme?: 'dark' | 'light' }
+interface Props {
+  title: string;
+  theme?: 'dark' | 'light';
+}
 const { title, theme = 'dark' } = Astro.props;
 const base = import.meta.env.BASE_URL;
 ---
+
 <!doctype html>
 <html lang="en" data-theme={theme}>
   <head>
-    <meta charset="utf-8"/><meta name="viewport" content="width=device-width"/>
-    <meta name="color-scheme" content={theme}/><title>{title} · astrok</title>
-    <link rel="icon" type="image/svg+xml" href={appIcon}/>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="color-scheme" content={theme} />
+    <title>{title} · astrok</title>
+    <link rel="icon" type="image/svg+xml" href={appIcon} />
   </head>
   <body>
-    <a class="skip" href="#main">Skip to content</a>
+    <a class="skip" href="#main">
+      Skip to content
+    </a>
     <header class="site-header">
       <a href={base} class="brand" aria-label="astrok home">
-        <img src={theme === 'light' ? inkMark : darkMark} alt="" width="40" height="40"/>
-        <span>astro<span class="brand-k">k</span></span>
+        <img src={theme === 'light' ? inkMark : darkMark} alt="" width="40" height="40" />
+        <span>
+          astro<span class="brand-k">k</span>
+        </span>
       </a>
       <nav aria-label="Main">
         <a href={`${base}guide/`}>Guide</a>
         <a href={`${base}agents/`}>AI agents</a>
         <details class="demo-menu">
           <summary>Demos</summary>
-          <div><a href={`${base}workspace/`}>Workspace</a><a href={`${base}solid/`}>Solid components</a><a href={`${base}design-system/`}>Design system</a></div>
+          <div>
+            <a href={`${base}workspace/`}>Workspace</a>
+            <a href={`${base}solid/`}>Solid components</a>
+            <a href={`${base}design-system/`}>Design system</a>
+          </div>
         </details>
         <a href="https://github.com/f1b0-gh/astrok">GitHub</a>
       </nav>
     </header>
-    <main id="main"><slot /></main>
+    <main id="main">
+      <slot />
+    </main>
     <footer class="site-footer">Static knowledge. Explicit interactions. Traceable sources.</footer>
   </body>
 </html>

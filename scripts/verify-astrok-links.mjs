@@ -6,7 +6,8 @@ import { promisify } from 'node:util';
 
 // Run the installed Astro CLI against packed packages, with no workspace imports.
 const consumer = process.argv[2];
-if (!consumer || !path.isAbsolute(consumer)) throw new Error('Expected an absolute consumer directory');
+if (!consumer || !path.isAbsolute(consumer))
+  throw new Error('Expected an absolute consumer directory');
 const fixture = await mkdtemp(path.join(consumer, '.link-check-'));
 const execute = promisify(execFile);
 const valid = '---\ntype: Guide\n---\n# Topic\n[Other](other.md#other)\n';
@@ -15,13 +16,22 @@ const topic = path.join(fixture, 'knowledge/topic.md');
 const output = path.join(fixture, 'public/okf/topic.md');
 async function configure(strictLinks, base = '/') {
   const options = { presentation: 'plain', ...(strictLinks === undefined ? {} : { strictLinks }) };
-  await writeFile(path.join(fixture, 'astro.config.mjs'), `import {okfIntegration} from '@astrokjs/astro';\nexport default {base: ${JSON.stringify(base)}, integrations: [okfIntegration(${JSON.stringify(options)})]};\n`);
+  await writeFile(
+    path.join(fixture, 'astro.config.mjs'),
+    `import {okfIntegration} from '@astrokjs/astro';\nexport default {base: ${JSON.stringify(base)}, integrations: [okfIntegration(${JSON.stringify(options)})]};\n`,
+  );
 }
 async function build() {
   try {
-    const result = await execute(process.execPath, [path.join(consumer, 'node_modules/astro/bin/astro.mjs'), 'build'], {
-      cwd: fixture, timeout: 60000, env: { ...process.env, NO_COLOR: '1' },
-    });
+    const result = await execute(
+      process.execPath,
+      [path.join(consumer, 'node_modules/astro/bin/astro.mjs'), 'build'],
+      {
+        cwd: fixture,
+        timeout: 60000,
+        env: { ...process.env, NO_COLOR: '1' },
+      },
+    );
     return { code: 0, log: result.stdout + result.stderr };
   } catch (error) {
     if (typeof error.code !== 'number' || error.killed) throw error;
@@ -34,15 +44,23 @@ try {
   await writeFile(path.join(fixture, 'package.json'), '{"type":"module","private":true}\n');
   // Exercise the exact getting-started route and Markdown, so the quickstart cannot drift.
   const guide = await readFile(new URL('../knowledge/getting-started.md', import.meta.url), 'utf8');
-  const route = guide.match(/Create `src\/pages\/\[\.\.\.slug\]\.astro`:[\s\S]*?```astro\n([\s\S]*?)```/)?.[1];
+  const route = guide.match(
+    /Create `src\/pages\/\[\.\.\.slug\]\.astro`:[\s\S]*?```astro\n([\s\S]*?)```/,
+  )?.[1];
   assert.ok(route, 'Getting-started plain-mode route');
   await writeFile(path.join(fixture, 'src/pages/[...slug].astro'), route);
   const example = guide.match(/```markdown\n([\s\S]*?)```/)?.[1];
   assert.ok(example, 'Getting-started Markdown example');
   await writeFile(path.join(fixture, 'knowledge/first-page.md'), example);
-  await writeFile(path.join(fixture, 'knowledge/index.md'), '# Home\n- [First page](first-page.md)\n');
+  await writeFile(
+    path.join(fixture, 'knowledge/index.md'),
+    '# Home\n- [First page](first-page.md)\n',
+  );
   await mkdir(path.join(fixture, 'knowledge/nested'));
-  await writeFile(path.join(fixture, 'knowledge/nested/Guide One.md'), '---\ntype: Guide\n---\n# Nested guide\n[Home](/index.md)\n');
+  await writeFile(
+    path.join(fixture, 'knowledge/nested/Guide One.md'),
+    '---\ntype: Guide\n---\n# Nested guide\n[Home](/index.md)\n',
+  );
   await writeFile(path.join(fixture, 'knowledge/other.md'), '---\ntype: Guide\n---\n# Other\n');
   await writeFile(topic, valid);
   await configure();
@@ -55,7 +73,10 @@ try {
   assert.doesNotMatch(page, /type: Guide|description: A short/);
   await readFile(path.join(fixture, 'dist/nested/Guide One/index.html'));
   await assert.rejects(readFile(path.join(fixture, 'dist/okf/.astrok-owned.json')), /ENOENT/);
-  assert.match(await readFile(path.join(fixture, 'public/okf/.astrok-owned.json'), 'utf8'), /@astrok\/okf/);
+  assert.match(
+    await readFile(path.join(fixture, 'public/okf/.astrok-owned.json'), 'utf8'),
+    /@astrok\/okf/,
+  );
   const manifestPath = path.join(fixture, 'public/okf/manifest.json');
   const manifest = await readFile(manifestPath, 'utf8');
   await writeFile(topic, invalid);
@@ -82,7 +103,9 @@ try {
   result = await build();
   assert.equal(result.code, 0, result.log);
   assert.match(result.log, /untyped.md/);
-  console.log('Packed consumer link checks passed: strict failure, preserved output, warning opt-out and repair.');
+  console.log(
+    'Packed consumer link checks passed: strict failure, preserved output, warning opt-out and repair.',
+  );
 } finally {
   await rm(fixture, { recursive: true, force: true });
 }

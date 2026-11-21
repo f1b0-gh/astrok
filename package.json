@@ -29,16 +29,16 @@
     "test:docs:browser": "playwright test",
     "audit:design": "node scripts/audit-design-system.mjs",
     "report:design": "node scripts/collect-design-evidence.mjs",
-    "format": "prettier --write \"packages/runtime/{src,tests}/**/*.ts\" tests/hypermedia-browser.spec.mjs",
-    "format:check": "prettier --check \"packages/runtime/{src,tests}/**/*.ts\" tests/hypermedia-browser.spec.mjs",
+    "format": "prettier --write . --ignore-path .gitignore --ignore-path .prettierignore",
+    "format:check": "prettier --check . --ignore-path .gitignore --ignore-path .prettierignore",
     "pretest": "npm run build:packages"
   },
   "dependencies": {
     "@astrojs/starlight": "0.43.1",
-    "@astrokjs/theme": "0.1.0",
-    "astro": "7.4.13",
+    "@astrokjs/astro": "0.1.0",
     "@astrokjs/okf": "0.1.0",
-    "@astrokjs/astro": "0.1.0"
+    "@astrokjs/theme": "0.1.0",
+    "astro": "7.4.13"
   },
   "engines": {
     "node": ">=24.0.0 <25"
@@ -49,6 +49,7 @@
     "@playwright/test": "1.65.1",
     "@types/node": "26.6.6",
     "prettier": "3.10.1",
+    "prettier-plugin-astro": "1.1.2",
     "typescript": "6.0.3"
   },
   "workspaces": [

@@ -8,7 +8,8 @@ body:
     id: environment
     attributes:
       label: Environment
-      description: Include Astrok package versions or commit, Node, Astro, OS and browser when relevant.
+      description:
+        Include Astrok package versions or commit, Node, Astro, OS and browser when relevant.
     validations:
       required: true
   - type: textarea

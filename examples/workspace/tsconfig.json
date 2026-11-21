@@ -9,20 +9,10 @@
     "verbatimModuleSyntax": true,
     "jsx": "preserve",
     "jsxImportSource": "@solidjs/web",
-    "lib": [
-      "ES2023",
-      "DOM",
-      "DOM.Iterable"
-    ],
-    "types": [
-      "vite/client"
-    ],
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["vite/client"],
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": [
-    "src/client/**/*.ts",
-    "src/client/**/*.tsx",
-    "src/components/**/*.tsx"
-  ]
+  "include": ["src/client/**/*.ts", "src/client/**/*.tsx", "src/components/**/*.tsx"]
 }

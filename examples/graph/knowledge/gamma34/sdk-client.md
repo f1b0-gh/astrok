@@ -29,6 +29,6 @@ This fictional client has three relationships:
 - It uses [authentication](../authentication.md).
 - Its authentication interface is similar to the [alternate client's](alternate-client.md).
 
-The metadata records these relationships so a graph query can follow them.
-The similarity applies to the stated interface; it does not mean that the two
-clients are interchangeable, or that similarity carries through other clients.
+The metadata records these relationships so a graph query can follow them. The similarity applies to
+the stated interface; it does not mean that the two clients are interchangeable, or that similarity
+carries through other clients.

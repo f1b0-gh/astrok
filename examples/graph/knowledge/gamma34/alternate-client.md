@@ -9,8 +9,8 @@ graph_kind: thing
 # Alternate client
 
 This fictional client has an authentication interface similar to the
-[example SDK client's](sdk-client.md). The comparison applies only to the
-`authentication-interface` context.
+[example SDK client's](sdk-client.md). The comparison applies only to the `authentication-interface`
+context.
 
-The relationship is recorded on the example client page. A graph query can
-follow it from either client without recording a second edge.
+The relationship is recorded on the example client page. A graph query can follow it from either
+client without recording a second edge.

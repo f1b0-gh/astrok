@@ -1,45 +1,89 @@
 <!-- @dsCard height=288 -->
 <!doctype html>
 <html lang="fr">
-<head>
-<meta charset="utf-8">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600&family=Inter:wght@400&display=swap">
-<style>
-  html, body { margin: 0; }
-  .cover { position: relative; width: 960px; height: 288px; overflow: hidden; background: var(--ground); }
-  .cover svg { position: absolute; inset: 0; }
-  .voltage { fill: var(--voltage); }
-  .ink { fill: var(--ink); }
-  .muted { fill: var(--ink-muted); }
-  .cut { fill: var(--ground); }
-  .r-lg { rx: var(--radius-lg); }
-  .text { position: absolute; left: 48px; bottom: 40px; max-width: 440px; }
-  .name { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 112px; line-height: 0.92; letter-spacing: -0.03em; color: var(--ink); }
-  .tag { margin: 16px 0 0; font-family: var(--font-sans); font-size: 14px; line-height: 22px; color: var(--ink-muted); }
-</style>
-</head>
-<body>
-<div class="cover">
-  <svg width="960" height="288" viewBox="0 0 960 288" aria-hidden="true">
-    <!--
+  <head>
+    <meta charset="utf-8" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@600&family=Inter:wght@400&display=swap"
+    />
+    <style>
+      html,
+      body {
+        margin: 0;
+      }
+      .cover {
+        position: relative;
+        width: 960px;
+        height: 288px;
+        overflow: hidden;
+        background: var(--ground);
+      }
+      .cover svg {
+        position: absolute;
+        inset: 0;
+      }
+      .voltage {
+        fill: var(--voltage);
+      }
+      .ink {
+        fill: var(--ink);
+      }
+      .muted {
+        fill: var(--ink-muted);
+      }
+      .cut {
+        fill: var(--ground);
+      }
+      .r-lg {
+        rx: var(--radius-lg);
+      }
+      .text {
+        position: absolute;
+        left: 48px;
+        bottom: 40px;
+        max-width: 440px;
+      }
+      .name {
+        margin: 0;
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 112px;
+        line-height: 0.92;
+        letter-spacing: -0.03em;
+        color: var(--ink);
+      }
+      .tag {
+        margin: 16px 0 0;
+        font-family: var(--font-sans);
+        font-size: 14px;
+        line-height: 22px;
+        color: var(--ink-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cover">
+      <svg width="960" height="288" viewBox="0 0 960 288" aria-hidden="true">
+        <!--
       blocks: voltage 200x264 (radius-lg), ink 96x136 (radius-lg), ink-muted 120x96 (radius-lg) bleeding right
       arrangement: one tall voltage slab bleeding off the top, two satellites lower left and lower right
       pattern: literal motif row (spark/bolt) -> four ground-coloured bars cut out of the slab at the slant token (-10deg), the logo's own angle
       steps/radii: bar pitch space-8 (32px), bar width 10px, gaps space-6 (24px), corners radius-lg
     -->
-    <rect class="ink r-lg" x="520" y="128" width="96" height="136"></rect>
-    <rect class="voltage r-lg" x="640" y="-24" width="200" height="264"></rect>
-    <polygon class="cut" points="680,240 690,240 736.5,-24 726.5,-24"></polygon>
-    <polygon class="cut" points="712,240 722,240 768.5,-24 758.5,-24"></polygon>
-    <polygon class="cut" points="744,240 754,240 800.5,-24 790.5,-24"></polygon>
-    <polygon class="cut" points="776,240 786,240 832.5,-24 822.5,-24"></polygon>
-    <rect class="muted r-lg" x="864" y="168" width="120" height="96"></rect>
-  </svg>
-  <div class="text">
-    <p class="name">astrok</p>
-    <p class="tag">Astro, Starlight et SolidJS, sous tension.</p>
-  </div>
-</div>
-<script></script>
-</body>
+        <rect class="ink r-lg" x="520" y="128" width="96" height="136"></rect>
+        <rect class="voltage r-lg" x="640" y="-24" width="200" height="264"></rect>
+        <polygon class="cut" points="680,240 690,240 736.5,-24 726.5,-24"></polygon>
+        <polygon class="cut" points="712,240 722,240 768.5,-24 758.5,-24"></polygon>
+        <polygon class="cut" points="744,240 754,240 800.5,-24 790.5,-24"></polygon>
+        <polygon class="cut" points="776,240 786,240 832.5,-24 822.5,-24"></polygon>
+        <rect class="muted r-lg" x="864" y="168" width="120" height="96"></rect>
+      </svg>
+      <div class="text">
+        <p class="name">astrok</p>
+        <p class="tag">Astro, Starlight et SolidJS, sous tension.</p>
+      </div>
+    </div>
+    <script></script>
+  </body>
 </html>

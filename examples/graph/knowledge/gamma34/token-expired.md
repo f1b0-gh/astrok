@@ -14,8 +14,8 @@ graph_relations:
 
 # Token expires
 
-This is the first event in the fictional refresh flow. The next modeled event
-is [a refresh request](refresh-requested.md).
+This is the first event in the fictional refresh flow. The next modeled event is
+[a refresh request](refresh-requested.md).
 
-The `next_step` relationship records the order chosen for this example. It does
-not claim that every application refreshes a token when it expires.
+The `next_step` relationship records the order chosen for this example. It does not claim that every
+application refreshes a token when it expires.

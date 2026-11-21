@@ -1,6 +1,7 @@
 ---
-okf_version: "0.3"
+okf_version: '0.3'
 ---
+
 # Fictional SDK graph
 
 This bundle demonstrates authored relationships. It describes no real SDK.

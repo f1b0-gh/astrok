@@ -1,0 +1,7 @@
+# In addition to .gitignore, never traverse the private local discussion repo.
+.local/
+.git/
+
+# Preserve upstream font, license and binary asset inputs verbatim.
+**/LICENSE*
+**/NOTICE

@@ -1,6 +1,7 @@
 ---
-okf_version: "0.3"
+okf_version: '0.3'
 ---
+
 # Astrok documentation
 
 Astrok builds Astro sites from Markdown, with optional Solid 2 components.
