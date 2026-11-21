@@ -16,17 +16,18 @@ static guides, hydrated counters, shared controls and a design-system preview.
 
 ## Try it
 
-With Node 24:
+[Open the preview](https://f1b0-gh.github.io/astrok/workspace/).
+
+To run it locally with Node 24:
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open [the workspace](http://127.0.0.1:4341/workspace/) or
-[the Solid components](http://127.0.0.1:4341/solid/). To try the sample JSON/SSE
-service, run `npm run build` then `npm run preview` and open
-[the preview](http://127.0.0.1:4338/workspace/).
+The local workspace is at `http://127.0.0.1:4341/workspace/`; the Solid demo
+is at `/solid/`. The sample JSON/SSE service runs locally with
+`npm run build` followed by `npm run preview`.
 
 `npm run dev:docs` starts the Starlight documentation example.
 [Build and test](BUILDING.md) lists the verification commands.
