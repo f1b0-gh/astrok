@@ -16,15 +16,6 @@ interactive, you drop in a [Solid 2](https://www.solidjs.com/) component.
 
 ## Why
 
-For example, keep an API guide in `knowledge/api/auth.md`. A site plus an
-`llms.txt` list can point an assistant at that page. Astrok additionally builds
-`/api/auth/`, the exact source at `/okf/api/auth.md`, and a manifest entry with
-its stable `api/auth` ID, metadata and resolved links from that same file.
-Choose Astrok when you need those source and metadata contracts, optional
-relationship queries, or Solid 2 interactions. For a prose-only site that just
-needs a list of links for assistants, plain Starlight with an `llms.txt` plugin
-may be enough.
-
 Most documentation sites are built for browsers. An AI assistant pointed at
 them has to scrape rendered HTML, guess which page is authoritative and often
 cannot cite a stable source. Copying the docs into a separate "for AI" format
@@ -32,6 +23,15 @@ means maintaining two versions that drift apart.
 
 Astrok keeps a single source of truth, the Markdown in `knowledge/`, and
 derives everything else from it on every build.
+
+Use Astrok when you need stable IDs, exact sources and metadata, optional
+relationship queries, or Solid 2 interactions. For a prose-only site that just
+needs a list of links for assistants, plain Starlight with an `llms.txt` plugin
+may be enough.
+
+For example, `knowledge/api/auth.md` becomes a page at `/api/auth/`, the exact
+source at `/okf/api/auth.md`, and a manifest entry with the stable `api/auth`
+ID, metadata and resolved links. All three come from the same Markdown file.
 
 ## What you get from one Markdown file
 
@@ -55,13 +55,18 @@ the build publishes:
 | Rendered page | `/first-page/` | People |
 | Original Markdown | `/okf/first-page.md` | Agents, downloads, citations |
 | Manifest entry | `/okf/manifest.json` | Agents: IDs, titles, metadata, links, URLs |
-| Assistant guide *(with graph enabled)* | `/llms.txt` | Agents: where to start and how to cite |
-| Graph *(optional)* | `/graph/graph.json`, `/graph/knowledge.sqlite` | Querying relationships between pages |
+| Assistant guide (graph enabled) | `/llms.txt` | Navigation and citation guidance |
+| Graph (opt-in) | `/graph/graph.json` | Page relationships |
+| SQLite index (opt-in) | `/graph/knowledge.sqlite` | Relationship queries |
 
-Links between files are resolved and checked: a broken link or a missing
-heading is reported at build time. `npm run validate:okf` fails on these
-diagnostics in CI; the standalone validator also supports a warning-only mode. The YAML front matter is kept in the source
-but never shown on the rendered page.
+The Astro integration warns about broken internal links and missing headings;
+these warnings **do not fail your build**. In this repository,
+`npm run validate:okf` enables `--strict` on `scripts/validate-okf.mjs` so link
+warnings fail CI. That script defaults to warning-only link checks and is not
+included in the packages. Astrok does not currently ship a validation CLI.
+
+The YAML front matter is kept in the source but never shown on the rendered
+page.
 
 Files follow the [Open Knowledge Format](https://okf.md/) (OKF): plain Markdown
 with YAML front matter. Nothing is locked into Astrok. **A concept file needs a
@@ -131,13 +136,13 @@ import Counter from '../components/Counter';
 <Counter name="visits" client:load />  <!-- interactive in the browser -->
 ```
 
-The workspace’s static reading routes ship no JavaScript. Add client directives
-where you need hydration. The example pins Solid 2.0.0; package peer ranges
-accept compatible Solid 2 releases.
+Solid components without a `client:` directive render to HTML and ship no
+JavaScript. Add a client directive where you need interaction. The example pins
+Solid 2.0.0; package peer ranges accept compatible Solid 2 releases.
 
 ## Point an assistant at your docs
 
-Give an assistant with web access a prompt like this:
+With the default configuration (graph disabled), start from the manifest:
 
 ```text
 Read https://example.com/docs/okf/manifest.json to find the relevant
@@ -146,22 +151,37 @@ don't answer the question.
 My question: how do I add a page?
 ```
 
-With `graph: true`, `/llms.txt` also provides a navigation/query guide. Include
-your deployment base in all URLs. More in [Using these docs with AI](knowledge/using-with-ai.md).
+With `graph: true`, start from the generated navigation and query guide:
+
+```text
+Read https://example.com/docs/llms.txt for navigation and query guidance.
+Use the linked manifest to find the relevant Markdown sources. Cite the
+pages you used. Say when the sources don't answer the question.
+My question: how do I add a page?
+```
+
+Both examples include a `/docs/` deployment base; use your site's actual base
+in every URL. More in [Using these docs with AI](knowledge/using-with-ai.md).
 
 ## Packages
 
 | Package | Use it to |
 | --- | --- |
-| [`@astrok/astro`](packages/astro/README.md) | Add Astrok to an Astro site; render Solid 2 components |
-| [`@astrok/okf`](packages/okf/README.md) | Read and validate Markdown bundles, publish sources, build the graph or SQLite index |
-| [`@astrok/runtime`](packages/runtime/README.md) | Share state between components; handle cancellable requests and streaming updates |
-| [`@astrok/theme`](packages/theme/README.md) | Use the shared styles, design tokens and logos |
+| [@astrok/astro][astro-pkg] | Astro integration and Solid 2 rendering |
+| [@astrok/okf][okf-pkg] | Markdown bundles, sources and optional indexes |
+| [@astrok/runtime][runtime-pkg] | Shared state, requests and streaming updates |
+| [@astrok/theme][theme-pkg] | Shared styles, design tokens and logos |
+
+[astro-pkg]: packages/astro/README.md
+[okf-pkg]: packages/okf/README.md
+[runtime-pkg]: packages/runtime/README.md
+[theme-pkg]: packages/theme/README.md
 
 `@astrok/runtime/hypermedia` adds an optional, Datastar-style attribute layer
-(`data-on`, `data-bind`, …). It runs **trusted, application-written code only**
-through [registered JavaScript handlers](packages/runtime/README.md), so it works
-without CSP `unsafe-eval`. Never feed it user-supplied HTML.
+(`data-on`, `data-bind`, …). Behaviour comes from
+[JavaScript handlers you register](packages/runtime/README.md). Attributes
+name those handlers; `data-bind` names a state path. This works without CSP
+`unsafe-eval`. Only pass trusted, application-authored HTML; never user content.
 
 ## Learn more
 
