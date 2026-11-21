@@ -398,3 +398,47 @@ test('decoder output controls initial and patched state', () => {
   assert.equal(shared.state.name, 'second');
   shared.dispose();
 });
+
+test('HTML and SSE element modes are decoded without accepting unsupported values', async () => {
+  for (const mode of [
+    'outer',
+    'inner',
+    'replace',
+    'prepend',
+    'append',
+    'before',
+    'after',
+    'remove',
+    'invalid',
+    '',
+  ]) {
+    for (const contentType of ['text/html', 'text/event-stream']) {
+      const seen: unknown[] = [];
+      const response = new Response(
+        contentType === 'text/html'
+          ? '<p>ok</p>'
+          : `event: datastar-patch-elements\ndata: elements <p>ok</p>\ndata: selector #out\ndata: mode ${mode}\n\n`,
+        {
+          headers: {
+            'content-type': contentType,
+            'datastar-selector': '#out',
+            'datastar-mode': mode,
+          },
+        },
+      );
+      const read = readPatches(response, new AbortController().signal, {
+        signals: () => {},
+        elements: (patch) => {
+          seen.push(patch);
+        },
+      });
+      if (mode === 'invalid' || mode === '') {
+        await assert.rejects(read, /Unsupported element patch mode/);
+        assert.deepEqual(seen, []);
+      } else {
+        await read;
+        assert.deepEqual(seen, [{ elements: '<p>ok</p>', selector: '#out', mode }]);
+      }
+    }
+  }
+});

@@ -44,7 +44,8 @@ publish npm packages.
    limitations. Replace checkout-only installation guidance only after this
    verification succeeds.
 
-Until a strict-CSP compiler contract exists, the optional hypermedia evaluator
-requires `unsafe-eval` and trusted HTML. State updates validate whole candidates;
+Hypermedia now requires registered callbacks in place of executable attributes;
+include this breaking migration and the removal of `compileAttribute` in release
+notes. It works without CSP `unsafe-eval` and still requires trusted HTML. State updates validate whole candidates;
 no constant-time update guarantee is made. Include changes to these contracts in
 release notes. Keep build output and tarballs out of Git.

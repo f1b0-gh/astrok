@@ -36,14 +36,14 @@ test.beforeEach(async ({ page }) => {
   await page.goto(process.env.ASTROK_BASE || '/');
 });
 
-test('event expressions compile once per binding and update after attribute changes', async ({
+test('registered events update after attribute changes without compiling code', async ({
   page,
 }) => {
   const result = await page.evaluate(async () => {
     const { createHypermedia, createSharedState, flush } = await import('/__hypermedia_test__.js');
     const shared = createSharedState({ count: 0 }, (value) => value);
     const root = document.createElement('section');
-    root.innerHTML = '<button data-on:click="$count++">Click</button>';
+    root.innerHTML = '<button data-on:click="increment">Click</button>';
     document.body.append(root);
     const NativeFunction = window.Function;
     let compiled = 0;
@@ -57,7 +57,21 @@ test('event expressions compile once per binding and update after attribute chan
         return Reflect.construct(target, args);
       },
     });
-    const html = createHypermedia(shared, { allowedPaths: [] });
+    const html = createHypermedia(shared, {
+      allowedPaths: [],
+      handlers: {
+        increment: {
+          run: (state) => {
+            state.count++;
+          },
+        },
+        addTen: {
+          run: (state) => {
+            state.count += 10;
+          },
+        },
+      },
+    });
     try {
       html.mount(root);
       flush();
@@ -68,7 +82,7 @@ test('event expressions compile once per binding and update after attribute chan
       button.click();
       flush();
       const afterClicks = compiled;
-      button.setAttribute('data-on:click', '$count += 10');
+      button.setAttribute('data-on:click', 'addTen');
       await new Promise((resolve) => setTimeout(resolve, 0));
       button.click();
       flush();
@@ -80,7 +94,7 @@ test('event expressions compile once per binding and update after attribute chan
       root.remove();
     }
   });
-  expect(result).toEqual({ atMount: 1, afterClicks: 1, finalCompiles: 2, count: 12 });
+  expect(result).toEqual({ atMount: 0, afterClicks: 0, finalCompiles: 0, count: 12 });
 });
 
 test('number bindings accept empty as null, report validation errors and recover', async ({
@@ -152,7 +166,7 @@ test('rendered attributes and text do not rescan but new bindings and data-ignor
     const shared = createSharedState({ on: false }, (value) => value);
     const root = document.createElement('section');
     root.innerHTML =
-      '<span data-attr:title="$on" data-class:active="$on" data-show="$on" data-text="$on"></span>';
+      '<span data-attr:title="on" data-class:active="on" data-show="on" data-text="on"></span>';
     document.body.append(root);
     let scans = 0;
     const original = root.querySelectorAll;
@@ -160,7 +174,14 @@ test('rendered attributes and text do not rescan but new bindings and data-ignor
       scans++;
       return original.apply(this, args);
     };
-    const html = createHypermedia(shared, { allowedPaths: [] });
+    const html = createHypermedia(shared, {
+      allowedPaths: [],
+      handlers: {
+        on: { run: (state) => state.on },
+        changed: { run: () => 'changed' },
+        ignored: { run: () => 'ignored' },
+      },
+    });
     const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
     try {
       html.mount(root);
@@ -175,13 +196,13 @@ test('rendered attributes and text do not rescan but new bindings and data-ignor
       const renderScans = scans - before;
       const span = root.firstElementChild;
       const rendered = [span.title, span.className, span.style.display, span.textContent];
-      span.setAttribute('data-text', '"changed"');
+      span.setAttribute('data-text', 'changed');
       await tick();
       flush();
       const changed = span.textContent;
       root.setAttribute('data-ignore', '');
       await tick();
-      span.setAttribute('data-text', '"ignored"');
+      span.setAttribute('data-text', 'ignored');
       await tick();
       flush();
       const ignored = span.textContent;
@@ -244,5 +265,181 @@ test('trusted fragments preserve authored markup, including nested templates and
     clicked: 'yes',
     srcdoc: '<p>Trusted</p>',
     href: '#trusted',
+  });
+});
+
+test('registered bindings and fetched fragments work under an enforced strict CSP', async ({
+  page,
+}) => {
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.route('**/__hypermedia_csp__.html', (route) =>
+    route.fulfill({
+      contentType: 'text/html',
+      headers: {
+        'Content-Security-Policy':
+          "default-src 'none'; script-src 'self'; connect-src 'self'; base-uri 'none'; object-src 'none'",
+      },
+      body: `<!doctype html><html><head><script type="module" src="/__hypermedia_csp_app__.js"></script></head><body>
+      <section id="region" data-signals="initial">
+        <button id="increment" data-on:click__prevent__stop__once="increment">Increment once</button>
+        <button id="load" data-on:click="load">Load fragment</button>
+        <label>Note<input data-bind="note"></label>
+        <span id="note" data-text="note"></span>
+        <span id="count" data-text="count"></span>
+        <span id="derived" data-effect="derive" data-text="double"></span>
+        <span id="visible" data-show="even" data-class:even="even" data-attr:title="count">Even</span>
+        <div id="fragment"></div>
+      </section><output id="errors"></output><output id="violations"></output>
+    </body></html>`,
+    }),
+  );
+  await page.route('**/__hypermedia_csp_app__.js', (route) =>
+    route.fulfill({
+      contentType: 'text/javascript',
+      body: `import {createHypermedia, createSharedState} from '/__hypermedia_test__.js';
+      document.addEventListener('securitypolicyviolation', event => {
+        document.querySelector('#violations').textContent += event.blockedURI + ';';
+      });
+      // Confirm the policy is enforced by the browser, outside Playwright's evaluation world.
+      try { new Function('return 1')(); document.body.dataset.eval = 'allowed'; }
+      catch (error) { document.body.dataset.eval = error.name; }
+      const shared = createSharedState({count: 0, double: 0, note: ''}, value => value);
+      const html = createHypermedia(shared, {
+        allowedPaths: ['/__hypermedia_fragment__'],
+        onError: error => { document.querySelector('#errors').textContent = error.message; },
+        handlers: {
+          initial: {run: () => ({count: 2})},
+          increment: {run: (state, actions, element, event) => {
+            state.count++;
+            element.dataset.prevented = String(event.defaultPrevented);
+          }},
+          count: {run: state => state.count},
+          note: {run: state => state.note},
+          double: {run: state => state.double},
+          even: {run: state => state.count % 2 === 0},
+          derive: {watch: ['count'], run: state => { state.double = state.count * 2; }},
+          load: {run: (state, actions) => { void actions.get('/__hypermedia_fragment__'); }},
+          invalid: {run: (state, actions, element) => { element.setAttribute('data-on:click', '$count++'); }},
+        },
+      });
+      html.mount(document.querySelector('#region'));
+      document.querySelector('#region').addEventListener('click', () => { document.body.dataset.bubbled = 'yes'; });
+      document.body.dataset.ready = 'yes';
+      window.addEventListener('pagehide', () => { html.dispose(); shared.dispose(); }, {once: true});`,
+    }),
+  );
+  await page.route('**/__hypermedia_fragment__', (route) =>
+    route.fulfill({
+      contentType: 'text/html',
+      headers: { 'datastar-selector': '#fragment', 'datastar-mode': 'inner' },
+      body: '<button id="added" data-on:click="increment">Added</button><span id="added-count" data-text="count"></span><button id="invalid" data-on:click="invalid">Invalid</button>',
+    }),
+  );
+  await page.goto('/__hypermedia_csp__.html');
+  await expect(page.locator('body')).toHaveAttribute('data-ready', 'yes');
+  await expect(page.locator('body')).toHaveAttribute('data-eval', 'EvalError');
+  await expect(page.locator('#count')).toHaveText('2');
+  await expect(page.locator('#derived')).toHaveText('4');
+  await expect(page.locator('#visible')).toBeVisible();
+  await expect(page.locator('#visible')).toHaveClass('even');
+  await page.getByLabel('Note').fill('CSP works');
+  await expect(page.locator('#note')).toHaveText('CSP works');
+  await page.locator('#increment').click();
+  await expect(page.locator('#increment')).toHaveAttribute('data-prevented', 'true');
+  await expect(page.locator('body')).not.toHaveAttribute('data-bubbled');
+  await expect(page.locator('#count')).toHaveText('3');
+  await expect(page.locator('#derived')).toHaveText('6');
+  await expect(page.locator('#visible')).toBeHidden();
+  await expect(page.locator('#visible')).not.toHaveClass('even');
+  await page.locator('#increment').click();
+  await expect(page.locator('#count')).toHaveText('3');
+  await page.locator('#load').click();
+  await expect(page.locator('#added-count')).toHaveText('3');
+  await page.locator('#added').click();
+  await expect(page.locator('#count')).toHaveText('4');
+  await expect(page.locator('#derived')).toHaveText('8');
+  await expect(page.locator('#visible')).toHaveAttribute('title', '4');
+  await page.locator('#invalid').click();
+  await expect(page.locator('#errors')).toContainText('Unknown hypermedia handler: $count++');
+  await page.locator('#invalid').click();
+  await expect(page.locator('#count')).toHaveText('4');
+  // The deliberate enforcement probe is the only attempted CSP violation.
+  await expect(page.locator('#violations')).toHaveText('eval;');
+  expect(errors).toEqual([]);
+});
+
+test('effects require explicit watch keys and ignore unrelated state changes', async ({ page }) => {
+  const result = await page.evaluate(async () => {
+    const { createHypermedia, createSharedState, flush } = await import('/__hypermedia_test__.js');
+    const shared = createSharedState({ count: 0, other: 0 }, (value) => value);
+    const root = document.createElement('section');
+    document.body.append(root);
+    let runs = 0;
+    let initialRuns = 0;
+    const html = createHypermedia(shared, {
+      allowedPaths: [],
+      handlers: {
+        missingWatch: {
+          run: () => {
+            throw new Error('must not run');
+          },
+        },
+        watched: {
+          watch: ['count'],
+          run: () => {
+            runs++;
+          },
+        },
+        initial: {
+          watch: [],
+          run: () => {
+            initialRuns++;
+          },
+        },
+      },
+    });
+    try {
+      root.setAttribute('data-effect', 'missingWatch');
+      let rejected;
+      try {
+        html.mount(root);
+      } catch (error) {
+        rejected = error.message;
+      }
+      root.setAttribute('data-effect', 'watched');
+      root.innerHTML = '<span data-effect="initial"></span>';
+      const unmount = html.mount(root);
+      flush();
+      const initial = runs;
+      shared.update((state) => {
+        state.other++;
+      });
+      flush();
+      const unrelated = runs;
+      shared.update((state) => {
+        state.count++;
+      });
+      flush();
+      const changed = runs;
+      unmount();
+      shared.update((state) => {
+        state.count++;
+      });
+      flush();
+      return { rejected, initial, unrelated, changed, disposed: runs, initialRuns };
+    } finally {
+      html.dispose();
+      shared.dispose();
+      root.remove();
+    }
+  });
+  expect(result).toEqual({
+    rejected: 'Effect handler missingWatch requires an explicit watch list',
+    initial: 1,
+    unrelated: 1,
+    changed: 2,
+    disposed: 2,
+    initialRuns: 1,
   });
 });

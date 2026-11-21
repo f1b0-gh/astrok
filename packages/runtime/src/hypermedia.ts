@@ -1,4 +1,4 @@
-/** Adapted from soc-proto/apps/web/src/hypermedia.ts. Trusted expressions require CSP unsafe-eval. */
+/** Adapted from soc-proto/apps/web/src/hypermedia.ts. Bindings use registered application callbacks. */
 import {
   createEffect,
   createMemo,
@@ -9,7 +9,9 @@ import {
   getOwner,
   onCleanup,
 } from 'solid-js';
-import { tokenizer } from 'acorn';
+import { createHandlerRegistry } from './handlers.js';
+import type { HypermediaActions, HypermediaHandler } from './handlers.js';
+export type { HypermediaActions, HypermediaHandler } from './handlers.js';
 import morphdomImport from 'morphdom';
 // morphdom 2 ships a CJS runtime with ESM-shaped declarations; normalize its callable boundary.
 interface MorphOptions {
@@ -21,7 +23,8 @@ import { readPatches } from './sse.js';
 import type { ElementPatch } from './sse.js';
 import type { SharedState } from './state.js';
 
-export interface HypermediaOptions {
+export interface HypermediaOptions<T extends Record<string, unknown> = Record<string, unknown>> {
+  handlers?: Readonly<Record<string, HypermediaHandler<T>>>;
   allowedPaths: readonly string[];
   protectedRoots?: readonly Element[];
   onError?: (error: Error) => void;
@@ -34,15 +37,6 @@ export interface Hypermedia {
   dispose(): void;
 }
 
-export type AttributeActions = {
-  get: (url: string) => Promise<void>;
-  peek: (fn: () => unknown) => unknown;
-};
-export interface AttributeExpression {
-  readonly refs: readonly string[];
-  run(state: Record<string, unknown>, actions: AttributeActions, el: Element, evt?: Event): unknown;
-}
-type Actions = AttributeActions;
 const blocked = new Set(['__proto__', 'prototype', 'constructor']);
 const key = (value: string) => value.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 function pathParts(path: string) {
@@ -67,72 +61,6 @@ function writePath(state: Record<string, unknown>, path: string, value: unknown)
   node[parts.at(-1)!] = value;
 }
 
-/** Expressions are trusted application code, like Datastar attributes, not a
- * sandbox. Acorn token positions let us rewrite @actions without altering text
- * in strings, templates, regexes or comments. $names resolve to the shared store. */
-export function compileAttribute(source: string, statement = false): AttributeExpression {
-  const masked = source.replaceAll('@', '_');
-  const tokens = tokenizer(masked, { ecmaVersion: 'latest' });
-  const refs = new Set<string>();
-  const replacements: { start: number; end: number; value: string }[] = [];
-  for (const token of tokens) {
-    if (token.type.label !== 'name') continue;
-    const text = source.slice(token.start, token.end);
-    if (text.startsWith('@'))
-      replacements.push({
-        start: token.start,
-        end: token.end,
-        value: '__actions.' + text.slice(1),
-      });
-    if (text.startsWith('$') && text.length > 1) refs.add(text.slice(1));
-  }
-  let body = source;
-  for (const replacement of replacements.reverse())
-    body = body.slice(0, replacement.start) + replacement.value + body.slice(replacement.end);
-  const fn = new Function(
-    '__scope',
-    '__actions',
-    'evt',
-    'el',
-    `with(__scope){
-${
-  statement
-    ? body
-    : `return (
-${body}
-);`
-}
-}`,
-  );
-  return {
-    refs: [...refs],
-    run: (state: Record<string, unknown>, actions: Actions, el: Element, evt?: Event) =>
-      fn(
-        new Proxy(
-          {},
-          {
-            has: (_, name) => typeof name === 'string' && name.startsWith('$'),
-            get: (_, name) => {
-              if (typeof name !== 'string') return undefined;
-              const k = name.slice(1);
-              if (blocked.has(k)) throw new Error('Invalid signal name');
-              return state[k];
-            },
-            set: (_, name, value) => {
-              const k = String(name).slice(1);
-              if (blocked.has(k)) throw new Error('Invalid signal name');
-              state[k] = value;
-              return true;
-            },
-          },
-        ),
-        actions,
-        evt,
-        el,
-      ),
-  };
-}
-
 function inputValue(input: HTMLInputElement): string | boolean | number | null {
   if (input.type === 'checkbox') return input.checked;
   if (input.type !== 'number') return input.value;
@@ -145,8 +73,9 @@ function inputValue(input: HTMLInputElement): string | boolean | number | null {
 
 export function createHypermedia<T extends Record<string, unknown>>(
   shared: SharedState<T>,
-  options: HypermediaOptions,
+  options: HypermediaOptions<NoInfer<T>>,
 ): Hypermedia {
+  const resolveHandler = createHandlerRegistry(options.handlers);
   let disposed = false;
   const protectedRoots = options.protectedRoots ?? [];
   const protectedNode = (node: Node) =>
@@ -169,13 +98,13 @@ export function createHypermedia<T extends Record<string, unknown>>(
   const inside = (node: Node) => [...regions].some((root) => root === node || root.contains(node));
   const report = (error: unknown) =>
     (options.onError ?? console.error)(error instanceof Error ? error : new Error(String(error)));
-  const actions = (el: Element): Actions => ({
+  const actions = (el: Element): HypermediaActions => ({
     get: (url) => request(el, url),
     peek: (fn) => untrack(fn),
   });
-  const run = (expression: AttributeExpression, el: Element, evt?: Event) => {
+  const run = (handler: HypermediaHandler<T>, el: Element, evt?: Event) => {
     shared.update((draft) => {
-      expression.run(draft, actions(el), el, evt);
+      handler.run(draft, actions(el), el, evt);
     });
   };
   function bind(el: Element, attributes: Attr[], previous?: Map<string, string>) {
@@ -186,14 +115,13 @@ export function createHypermedia<T extends Record<string, unknown>>(
       const name = parts.join(':');
       if (kind === 'signals') {
         if (previous?.get(attr.name) === attr.value) continue;
-        const expression = compileAttribute(attr.value);
+        const handler = resolveHandler(attr.value);
         if (name)
           shared.update((s) => {
             if (!mods.includes('ifmissing') || readPath(s, name) === undefined)
-              writePath(s, name, expression.run(s, actions(el), el));
+              writePath(s, name, handler.run(s, actions(el), el));
           });
-        else
-          shared.patch(expression.run(shared.state, actions(el), el), mods.includes('ifmissing'));
+        else shared.patch(handler.run(shared.state, actions(el), el), mods.includes('ifmissing'));
       }
       if (kind === 'bind') {
         const path = name || attr.value;
@@ -221,12 +149,12 @@ export function createHypermedia<T extends Record<string, unknown>>(
             if (kind === 'on') {
               if (!name || mods.some((m) => !['prevent', 'stop', 'once'].includes(m)))
                 throw new Error(`Unsupported event attribute: ${attr.name}`);
-              const expression = compileAttribute(attr.value, true);
+              const handler = resolveHandler(attr.value);
               const listener = (evt: Event) => {
                 try {
                   if (mods.includes('prevent')) evt.preventDefault();
                   if (mods.includes('stop')) evt.stopPropagation();
-                  run(expression, el, evt);
+                  run(handler, el, evt);
                 } catch (e) {
                   report(e);
                 }
@@ -261,28 +189,30 @@ export function createHypermedia<T extends Record<string, unknown>>(
                 },
               );
             } else if (kind === 'effect') {
-              const expression = compileAttribute(attr.value, true);
+              const handler = resolveHandler(attr.value);
+              if (handler.watch === undefined)
+                throw new Error(`Effect handler ${attr.value} requires an explicit watch list`);
               const deps = createMemo(
                 () =>
                   revision() +
                   '|' +
-                  expression.refs.map((k) => JSON.stringify(shared.state[k])).join('\0'),
+                  handler.watch!.map((k) => JSON.stringify(shared.state[k])).join('\0'),
               );
               createEffect(deps, () => {
                 try {
                   shared.update((s) => {
-                    expression.run(s, actions(el), el);
+                    handler.run(s, actions(el), el);
                   });
                 } catch (e) {
                   report(e);
                 }
               });
             } else {
-              const expression = compileAttribute(attr.value);
+              const handler = resolveHandler(attr.value);
               createEffect(
                 () => {
                   revision();
-                  return expression.run(shared.state, actions(el), el);
+                  return handler.run(shared.state, actions(el), el);
                 },
                 (value) => {
                   if (kind === 'text') {
@@ -390,7 +320,7 @@ export function createHypermedia<T extends Record<string, unknown>>(
       throw new Error('Unsupported morph mode');
     const template = document.createElement('template');
     template.innerHTML = elements;
-    // Intentionally no sanitizer: fragments and data-* expressions are trusted
+    // Intentionally no sanitizer: fragments and registered callbacks are trusted
     // application code. Native handlers, URLs and nested templates are preserved.
     const nodes = selector
       ? Array.from(document.querySelectorAll(selector))

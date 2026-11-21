@@ -29,15 +29,21 @@ The [graph example](examples/graph/README.md) demonstrates typed relationships.
 The optional hypermedia entry point executes trusted application code. It does
 not sanitize HTML; native handlers, URLs and nested templates remain intact.
 Same-origin request policy and protected Solid roots constrain ownership, not
-trust. Event expressions compile once when bound, and render-only mutations do
-not rescan the region.
+trust. Bindings name callbacks in a per-instance `handlers` registry. Application
+bundlers compile those callbacks as ordinary JavaScript; the browser never
+compiles attribute strings. The registry and effect watch lists are snapshotted
+at creation. Unknown names fail, including in HTML received over SSE or fetch;
+fragment producers must use the receiving application's registered names.
 
-Hypermedia still requires CSP `unsafe-eval`. Compiling static attributes at build
-time alone would not cover HTML received later over SSE or fetch. A future
-strict-CSP mode needs a compiler/handler registry contract shared by the page
-build and the fragment producer, including how unknown expressions fail. That
-is a separate API change. The core state/request/SSE entry point does not load
-the evaluator; use it with authored Solid handlers under a strict CSP.
+Value handlers read reactive state. Event/effect handlers mutate validated drafts
+synchronously; effects explicitly declare root state keys to watch. `data-bind`
+retains state-path syntax. This replaces executable attributes and removes the
+Acorn dependency and `compileAttribute` export. Runtime transport validation
+uses ordinary checks instead of Zod's optional JIT; applications configure their
+own decoders for CSP. Both initial and fetched bindings
+are tested with an enforced `script-src 'self'` policy, without `unsafe-eval` or
+`unsafe-inline`. CSP configuration for other Astro features remains the site's
+responsibility. Render-only mutations do not rescan the region.
 
 Shared-state updates validate the complete candidate and decoder output before
 committing, including cross-field invariants and schema transformations. This

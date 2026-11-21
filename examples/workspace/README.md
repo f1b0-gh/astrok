@@ -37,10 +37,11 @@ its client directives. `/solid-static/` renders the same component without
 JavaScript. The older workspace keeps its separate compilation path to test
 shared state and hypermedia ownership.
 
-The optional expression layer deliberately uses trusted, application-authored
-attributes and requires CSP `unsafe-eval`. Do not interpolate untrusted content
-into executable attributes. Core Solid/state/SSE usage does not require the
-expression entry point. Application authorization, private caches and session
+The optional hypermedia layer uses names of registered JavaScript handlers in
+attributes. It does not require CSP `unsafe-eval`; HTML patches must still be
+trusted application-authored content. See the [runtime contract](../../packages/runtime/README.md)
+for registration and migration examples. Core Solid/state/SSE usage does not
+require the hypermedia entry point. Application authorization, private caches and session
 state belong in the consuming application, outside public OKF artifacts.
 
 See [Building and testing](../../BUILDING.md) for package-consumer verification

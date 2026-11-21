@@ -160,8 +160,8 @@ your deployment base in all URLs. More in [Using these docs with AI](knowledge/u
 
 `@astrok/runtime/hypermedia` adds an optional, Datastar-style attribute layer
 (`data-on`, `data-bind`, …). It runs **trusted, application-written code only**
-and requires a Content-Security-Policy that allows `unsafe-eval`. Never feed it
-user-supplied HTML.
+through [registered JavaScript handlers](packages/runtime/README.md), so it works
+without CSP `unsafe-eval`. Never feed it user-supplied HTML.
 
 ## Learn more
 

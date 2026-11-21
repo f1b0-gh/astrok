@@ -2,9 +2,13 @@
 
 ## Unreleased
 
-- Reuse compiled hypermedia event expressions, avoid rescans for rendered
-  attributes/text, and handle empty or rejected number input without uncaught
-  listener errors. Fix expressions ending in a line comment.
+- **Breaking:** replace executable hypermedia attributes with typed, registered
+  JavaScript handlers. Effects declare their watched state keys. Remove
+  `compileAttribute`, its expression types and the runtime Acorn/Zod dependencies;
+  no `unsafe-eval` is required. Initial and fetched bindings are tested under
+  strict CSP. See the runtime README for migration instructions.
+- Avoid rescans for rendered attributes/text and handle empty or rejected number
+  input without uncaught listener errors.
 - Remove the incomplete HTML filter. Hypermedia fragments are trusted application
   code and are not sanitized; native handlers and nested templates are preserved.
 - Default graph and SQLite generation to opt-in. The documentation example

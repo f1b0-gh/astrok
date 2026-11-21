@@ -1,16 +1,39 @@
 /** Datastar-compatible subset adapted from soc-proto/apps/web/src/shared-signals.ts. */
-import { z } from 'zod';
 import { validatePatch } from './state.js';
 import type { SignalPatch } from './state.js';
 
-const elementSchema = z.object({
-  elements: z.string(),
-  selector: z.string().optional(),
-  mode: z
-    .enum(['outer', 'inner', 'replace', 'prepend', 'append', 'before', 'after', 'remove'])
-    .optional(),
-});
-export type ElementPatch = z.infer<typeof elementSchema>;
+const elementModes = [
+  'outer',
+  'inner',
+  'replace',
+  'prepend',
+  'append',
+  'before',
+  'after',
+  'remove',
+] as const;
+export interface ElementPatch {
+  elements: string;
+  selector?: string | undefined;
+  mode?: (typeof elementModes)[number] | undefined;
+}
+
+// Transport parsing supplies strings; only the mode needs narrowing here.
+function decodeElements(input: {
+  elements: string;
+  selector?: string | undefined;
+  mode?: string;
+}): ElementPatch {
+  const mode = input.mode;
+  if (mode === undefined)
+    return {
+      elements: input.elements,
+      ...(input.selector === undefined ? {} : { selector: input.selector }),
+    };
+  const supported = elementModes.find((candidate) => candidate === mode);
+  if (!supported) throw new Error(`Unsupported element patch mode: ${mode}`);
+  return { ...input, mode: supported };
+}
 export interface PatchHandlers {
   signals(patch: SignalPatch, onlyIfMissing: boolean): void;
   elements?(patch: ElementPatch): void;
@@ -82,7 +105,7 @@ export async function readPatches(
     if (elements === undefined) return;
     const selector = response.headers.get('datastar-selector');
     const mode = response.headers.get('datastar-mode');
-    const patch = elementSchema.parse({
+    const patch = decodeElements({
       elements,
       ...(selector === null ? {} : { selector }),
       ...(mode === null ? {} : { mode }),
@@ -121,7 +144,7 @@ export async function readPatches(
           if (i >= 0) (fields[row.slice(0, i)] ??= []).push(row.slice(i + 1));
         }
         if (!fields.elements) throw new Error('Element patch is missing its elements field');
-        const patch = elementSchema.parse({
+        const patch = decodeElements({
           elements: fields.elements.join('\n'),
           ...(fields.selector ? { selector: fields.selector.join('\n') } : {}),
           ...(fields.mode ? { mode: fields.mode.join('\n') } : {}),

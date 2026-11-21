@@ -1,9 +1,6 @@
 /** Adapted from soc-proto/apps/web/src/shared-signals.ts (native Solid 2 draft store). */
 import { createRoot, createStore, getOwner, onCleanup, reconcile, snapshot } from 'solid-js';
-import { z } from 'zod';
-
-const patchSchema = z.looseObject({});
-export type SignalPatch = z.infer<typeof patchSchema>;
+export type SignalPatch = Record<string, unknown>;
 export const DEFAULT_MAX_DEPTH = 64;
 const blocked = new Set(['__proto__', 'constructor', 'prototype']);
 export const isObject = (value: unknown): value is Record<string, unknown> =>
@@ -40,7 +37,7 @@ export function validatePatch(input: unknown, maxDepth = DEFAULT_MAX_DEPTH): Sig
   }
   if (!isObject(input)) throw new Error('Expected a JSON object signal patch');
   visit(input, 0);
-  return patchSchema.parse(input);
+  return Object.fromEntries(Object.entries(input));
 }
 
 function merge(target: Record<string, unknown>, patch: SignalPatch, onlyIfMissing: boolean): void {

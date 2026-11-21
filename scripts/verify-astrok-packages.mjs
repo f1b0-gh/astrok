@@ -72,7 +72,26 @@ try {
   await run('npm', ['run', 'build'], consumer);
   await writeFile(path.join(consumer, 'contracts.ts'), `import {parseSource, readMetadata} from '@astrok/okf';
 import {okfIntegration} from '@astrok/astro';
-import type {SharedState, RequestState} from '@astrok/runtime';
+import {createSharedState, type ElementPatch, type SharedState, type RequestState} from '@astrok/runtime';
+import {createHypermedia, type HypermediaHandler} from '@astrok/runtime/hypermedia';
+// @ts-expect-error Executable attribute compilation is no longer a public API.
+import {compileAttribute} from '@astrok/runtime/hypermedia';
+const shared = createSharedState({count: 0}, value => value as {count: number});
+createHypermedia(shared, {allowedPaths: [], handlers: {
+  count: {run: state => state.count.toFixed()},
+  increment: {watch: ['count'], run(state, actions, element, event) {
+    state.count++;
+    const request: Promise<void> = actions.get('/api/');
+    const node: Element = element;
+    const optional: Event | undefined = event;
+    // @ts-expect-error State comes from the shared store, not handler inference.
+    state.count = 'wrong';
+  }},
+  // @ts-expect-error Watch keys must belong to shared state.
+  invalid: {watch: ['missing'], run: () => {}},
+}});
+const handler: HypermediaHandler<{count: number}> = {run: state => state.count};
+const patch: ElementPatch = {elements: '<p>ok</p>', selector: undefined, mode: undefined};
 import {KnowledgeGraph} from '@astrok/okf/graph';
 const document = parseSource('---\\ntype: Future\\n---\\nBody','topic.md');
 const state = readMetadata({verified: {by: 'human:reviewer', at: '2026-11-20'}});
@@ -83,7 +102,7 @@ const graph = KnowledgeGraph;
 export type Contracts = [typeof document, typeof integration, typeof graph, SharedState<{selected:string}>, RequestState<string>];
 `);
   for (const [module, resolution] of [['NodeNext', 'NodeNext'], ['ESNext', 'Bundler']]) {
-    await run(process.execPath, ['node_modules/typescript/bin/tsc', '--ignoreConfig', '--noEmit', '--strict', '--target', 'ES2023', '--module', module, '--moduleResolution', resolution, '--skipLibCheck', 'contracts.ts'], consumer);
+    await run(process.execPath, ['node_modules/typescript/bin/tsc', '--ignoreConfig', '--noEmit', '--strict', '--exactOptionalPropertyTypes', '--target', 'ES2023', '--module', module, '--moduleResolution', resolution, '--skipLibCheck', 'contracts.ts'], consumer);
   }
   await writeFile(path.join(consumer, 'smoke.mjs'), `import assert from 'node:assert/strict'; import {parseSource, readMetadata} from '@astrok/okf'; const r=parseSource(${JSON.stringify('---\ntype: Future\ncustom: {nested: true}\n---\nBody')},'topic.md'); assert.equal(r.errors.length,0); assert.equal(r.document.metadata.custom.nested,true); assert.equal(parseSource('Notes','README.md').document,null); assert.equal(readMetadata({stale_after:'invalid'}).freshness,'malformed');\n`);
   await run(process.execPath, ['smoke.mjs'], consumer);
