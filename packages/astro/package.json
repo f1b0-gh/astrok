@@ -43,7 +43,7 @@
     "zod": "4.6.7"
   },
   "peerDependencies": {
-    "@astrojs/starlight": "0.42.7",
+    "@astrojs/starlight": "0.43.1",
     "@solidjs/compiler": "^2.0.0",
     "@solidjs/vite-plugin": "^3.0.1",
     "@solidjs/web": "^2.0.0",

@@ -31,11 +31,12 @@ integration base also updates Astro's route prefix.
 Source generation only owns fresh/empty or previously marked directories.
 `publicDir/okf` and `publicDir/graph` must be dedicated generated projections;
 `llms.txt` belongs to the graph publication. Other public assets remain caller
-owned. Preserve `.astrok-owned.json` between generations. The repository-only
-compatibility wrapper migrates recognized legacy defaults; the public package
-does not claim arbitrary populated directories.
+owned. Preserve `.astrok-owned.json` between generations. The public package does not claim arbitrary populated directories; legacy
+unmarked output must be rebuilt in fresh generated directories.
 
-`graph` defaults to true; `sqlite` defaults to the `OKF_SQLITE !== '0'` policy.
+`graph` defaults to false. Set `graph: true` for JSON publication. SQLite is
+also opt-in: set `sqlite: true` or `OKF_SQLITE=1` with graph enabled; an explicit
+`sqlite: false` overrides the environment.
 Setting `graph: false` skips graph publication. Explicitly choose fresh output
 paths when changing publication policy; no broad caller-directory cleanup occurs.
 
@@ -64,8 +65,8 @@ Without a client directive, the result is HTML only. `client:load`, `client:idle
 slots are passed as component props (`children` for the default slot).
 
 Install the pinned optional peers when using this integration: `solid-js`,
-`@solidjs/web` and `@solidjs/compiler` at `2.0.0-rc.21`, and
-`@solidjs/vite-plugin` at `3.0.0-next.57`. They are already installed in this
+`@solidjs/web` and `@solidjs/compiler` at `2.0.0`, and
+`@solidjs/vite-plugin` at `3.0.1`. They are already installed in this
 workspace. The OKF integration alone does not load them.
 
 Astro owns both build graphs; no separate client build is needed for these

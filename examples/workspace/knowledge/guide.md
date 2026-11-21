@@ -67,10 +67,10 @@ messages through Astrok's adapter. This is a short stream that closes, not an
 ongoing subscription, and the Datastar browser runtime is not loaded.
 
 The HTML adapter updates registered regions and protects Solid's containers.
-Its attribute expressions are trusted application code, compiled with
-`new Function`, so this optional layer requires CSP `unsafe-eval`. Region
-protection does not make untrusted HTML safe. Solid can also use state and
-transport directly without the expression layer.
+Its attributes name registered JavaScript callbacks, bundled with the page,
+so this optional layer works without CSP `unsafe-eval`. Fetched fragments use
+the same registered names. Region protection does not make untrusted HTML safe.
+Solid can also use state and transport directly without the hypermedia layer.
 
 Vite compiles Solid before Astro bundles the final browser assets. Navigation
 and remounting dispose components, listeners, requests and streams before a

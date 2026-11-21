@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
-import { WasmDatabase } from '../backend/graph/wasm.ts';
-import { readBundle } from '../lib/okf/bundle.mjs';
-import { KnowledgeGraph } from '../backend/graph/memory.ts';
-import { projectGraph } from '../backend/graph/project.ts';
-import { compileIndex } from '../backend/graph/compiler.ts';
-import { migrate, SCHEMA_VERSION } from '../backend/graph/schema.ts';
-import { SqliteKnowledgeIndex } from '../backend/graph/query.ts';
+import { WasmDatabase } from '@astrok/okf/sqlite';
+import { readBundle } from '@astrok/okf';
+import { KnowledgeGraph } from '@astrok/okf/graph';
+import { projectGraph } from '@astrok/okf/graph';
+import { compileIndex } from '@astrok/okf/sqlite';
+import { migrate, SCHEMA_VERSION } from '@astrok/okf/sqlite';
+import { SqliteKnowledgeIndex } from '@astrok/okf/sqlite';
 
 async function fixture(t: test.TestContext, files: Record<string, string>) {
   const directory = await mkdtemp(path.join(tmpdir(), 'okf-graph-'));
@@ -157,7 +157,7 @@ test('repeated links on the same line retain separate source positions', async t
 });
 
 test('a failed SQL rebuild rolls back all graph tables and the search index', async t => {
-  const { storeGraph } = await import('../backend/graph/compiler.ts');
+  const { storeGraph } = await import('@astrok/okf/sqlite');
   const { root } = await fixture(t, { 'a.md': concept('Original searchable body') });
   const graph = projectGraph(await readBundle(root));
   const db = await WasmDatabase.open();

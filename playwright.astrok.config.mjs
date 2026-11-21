@@ -5,7 +5,7 @@ const port = process.env.ASTROK_PORT || '4338';
 export default defineConfig({
   workers: 2,
   testDir: './tests',
-  testMatch: ['astrok-browser.spec.mjs', 'design-system-browser.spec.mjs', 'solid-browser.spec.mjs'],
+  testMatch: ['hypermedia-browser.spec.mjs', 'astrok-browser.spec.mjs', 'design-system-browser.spec.mjs', 'solid-browser.spec.mjs'],
   outputDir: `./test-results-astrok/${port}`,
   use: {
     baseURL: `http://127.0.0.1:${port}`,

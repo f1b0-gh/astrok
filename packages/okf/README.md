@@ -30,7 +30,9 @@ dedicated generated output paths; do not add caller-authored files to them.
 
 `@astrok/okf/graph` exports the SQL-free graph and Node publication helpers.
 `@astrok/okf/sqlite` explicitly loads the optional SQLite WASM dependency.
-`publishIndex({ sqlite: false })` avoids importing that engine. These are Node
+`publishIndex()` defaults to SQL-free JSON publication; opt in with
+`publishIndex({ sqlite: true })`. Install with `npm ci --omit=optional` to omit
+optional dependencies, including SQLite (and optional hypermedia dependencies). These are Node
 build/query entry points and must remain off browser import graphs. Low-level
 publication writes known filenames, so supply a dedicated generated public tree.
 
@@ -44,3 +46,8 @@ Build with Node 24 and `npm run build --workspace=@astrok/okf` before packing.
 The package contains executable ESM plus generated declarations, including an
 explicit declaration-specifier rewrite after TypeScript compilation. Parser/site
 JavaScript remains maintained JavaScript; graph TypeScript is not duplicated.
+
+The graph entry point also exports `OKF_SPEC` and the Node filesystem helpers
+`atomicWrite`, `assertOutside` and `physicalPath` used by the repository CLI.
+The SQLite entry point exports `migrate` and `SCHEMA_VERSION` for migration
+verification. Repository scripts and tests consume these emitted package exports.

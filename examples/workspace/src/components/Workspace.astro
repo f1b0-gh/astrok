@@ -18,10 +18,10 @@ const { alternate = false } = Astro.props;
       <h2>{name === 'first' ? 'First workspace' : 'Second workspace'}</h2>
       <div data-hypermedia>
         <label>Selection<select data-bind="selected"><option value="alpha">Alpha</option><option value="beta">Beta</option></select></label>
-        <button type="button" data-on:click="$selected = 'beta'">Select beta</button>
-        <button type="button" data-on:click="$clicks = $clicks + 1">Count click</button>
-        <p>Selected: <strong data-selected data-text="$selected">alpha</strong> · Clicks: <span data-clicks data-text="$clicks">0</span></p>
-        <p>Summary: <span data-summary data-text="$summary">Preparing…</span></p>
+        <button type="button" data-on:click="selectBeta">Select beta</button>
+        <button type="button" data-on:click="increment">Count click</button>
+        <p>Selected: <strong data-selected data-text="selected">alpha</strong> · Clicks: <span data-clicks data-text="clicks">0</span></p>
+        <p>Summary: <span data-summary data-text="summary">Preparing…</span></p>
         <div id={`fragment-${name}`}><label>Fragment note<input id={`note-${name}`} data-bind="note" value="" /></label><p data-fragment-message>{staticDemo ? 'Local state demo' : 'Waiting for server fragment'}</p></div>
       </div>
       <div data-solid id={`solid-${name}`}><p>Loading interactive controls…</p></div>

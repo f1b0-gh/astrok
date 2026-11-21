@@ -76,7 +76,7 @@ test('navigation is accessible on desktop and mobile', async ({ page, isMobile }
 });
 
 test('published OKF graph supports SQL-free queries and source navigation', async ({ request }) => {
-  const { KnowledgeGraph } = await import('../../backend/graph/memory.ts');
+  const { KnowledgeGraph } = await import('@astrok/okf/graph');
   const response = await request.get('/graph/graph.json');
   expect(response.status()).toBe(200);
   const index = KnowledgeGraph.fromJSON(await response.json());
@@ -84,16 +84,7 @@ test('published OKF graph supports SQL-free queries and source navigation', asyn
   expect(index.search('slots')[0].node.id).toBe('solid-rendering');
   expect(index.export().metadata.okf_spec_version).toBe('0.3');
   expect(index.export().metadata.graph_model).toBe('gamma34/0.1');
-  const { SqliteKnowledgeIndex } = await import('../../backend/graph/query.ts');
-  const sqliteResponse = await request.get('/graph/knowledge.sqlite');
-  expect(sqliteResponse.status()).toBe(200);
-  const sql = await SqliteKnowledgeIndex.fromBytes(await sqliteResponse.body());
-  try {
-    expect(sql.runtime.wasm).toBe(true);
-    expect(sql.export().metadata.source_hash).toBe(index.export().metadata.source_hash);
-    expect(sql.export().nodes).toEqual(index.export().nodes);
-    expect(sql.neighbors('getting-started')).toEqual(index.neighbors('getting-started'));
-  } finally { sql.close(); }
+  expect((await request.get('/graph/knowledge.sqlite')).status()).toBe(404);
   const linked = index.neighbors('getting-started', { family: 'reference' });
   expect(linked.items.some(item => item.node.id === 'writing-content')).toBe(true);
   for (const item of linked.items) {

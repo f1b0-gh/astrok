@@ -7,7 +7,7 @@ import path from 'node:path';
 import assert from 'node:assert/strict';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const source = 'ressources/astrok-design-system';
+const source = 'resources/astrok-design-system';
 const relativeFiles = ['tokens.json', 'README.md', 'starlight/astrok.css', 'components/Cover/preview.html',
   'assets/Logos/astrok-mark-dark.svg', 'assets/Logos/astrok-mark-ink.svg',
   'assets/Logos/astrok-mark-white.svg', 'assets/Logos/astrok-app-icon.svg'];

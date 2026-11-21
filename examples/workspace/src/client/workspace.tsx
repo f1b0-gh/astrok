@@ -4,6 +4,9 @@ import { createSharedState, createLatestRequest, readPatches, type RequestState 
 import { createHypermedia } from '@astrok/runtime/hypermedia';
 import { z } from 'zod';
 
+// Application-owned decoders must also avoid JIT compilation under strict CSP.
+z.config({ jitless: true });
+
 const rowsSchema = z.looseObject({
   selection: z.enum(['alpha', 'beta']),
   rows: z.array(z.looseObject({ id: z.string().regex(/^\d+$/), label: z.string() })).max(1000),
@@ -97,7 +100,16 @@ export async function initialize() {
     }), controller.signal, { signals: (patch, missing) => shared.patch(patch, missing) });
     if (current !== generation) return;
     if (staticDemo) shared.patch({ summary: 'Local state demo' });
-    const hypermedia = createHypermedia(shared, { allowedPaths: [service], protectedRoots: [solid] });
+    const hypermedia = createHypermedia(shared, {
+      allowedPaths: [service], protectedRoots: [solid],
+      handlers: {
+        selectBeta: { run: (state) => { state.selected = 'beta'; } },
+        increment: { run: (state) => { state.clicks++; } },
+        selected: { run: (state) => state.selected },
+        clicks: { run: (state) => state.clicks },
+        summary: { run: (state) => state.summary },
+      },
+    });
     hypermedia.mount(root);
     solid.replaceChildren();
     const unmount = render(() => <Panel shared={shared} service={service} name={name} staticDemo={staticDemo} hypermedia={hypermedia} />, solid);

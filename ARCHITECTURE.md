@@ -23,3 +23,46 @@ shown in [the workspace example](examples/workspace/README.md).
 Graph indexes retain source references and authored relationships. They can be
 rebuilt from the Markdown; they do not generate claims or execute its contents.
 The [graph example](examples/graph/README.md) demonstrates typed relationships.
+
+## Review decisions (2026-11-21)
+
+The optional hypermedia entry point executes trusted application code. It does
+not sanitize HTML; native handlers, URLs and nested templates remain intact.
+Same-origin request policy and protected Solid roots constrain ownership, not
+trust. Bindings name callbacks in a per-instance `handlers` registry. Application
+bundlers compile those callbacks as ordinary JavaScript; the browser never
+compiles attribute strings. The registry and effect watch lists are snapshotted
+at creation. Unknown names fail, including in HTML received over SSE or fetch;
+fragment producers must use the receiving application's registered names.
+
+Value handlers read reactive state. Event/effect handlers mutate validated drafts
+synchronously; effects explicitly declare root state keys to watch. `data-bind`
+retains state-path syntax. This replaces executable attributes and removes the
+Acorn dependency and `compileAttribute` export. Runtime transport validation
+uses ordinary checks instead of Zod's optional JIT; applications configure their
+own decoders for CSP. Both initial and fetched bindings
+are tested with an enforced `script-src 'self'` policy, without `unsafe-eval` or
+`unsafe-inline`. CSP configuration for other Astro features remains the site's
+responsibility. Render-only mutations do not rescan the region.
+
+`createSharedState` validates the complete candidate and decoder output before
+committing, including cross-field invariants and schema transformations. This
+remains proportional to total state size. `createFieldState` is an explicit
+alternative for a fixed set of independently validated root fields; it cannot
+enforce cross-field invariants. Its `updateField` copies, validates and replaces
+only the selected branch. Hypermedia `data-bind` uses that capability when
+available, so a small form edit does not traverse an unrelated large dataset.
+Nested bindings pay for their containing root field. Full `update`/`patch` and
+event/effect handlers retain whole-state atomic validation. Both APIs preserve
+pending-write ordering, decoder-output isolation and owner cleanup.
+
+Package exports are the integration boundary for repository scripts and tests.
+There are no forwarding trees or legacy output-adoption layer. Adapted runtime
+code and its MIT attribution remain in this repository; those source-history
+references do not require sibling checkouts.
+
+Graph and SQLite generation are explicit opt-ins. The documentation example
+chooses a JSON graph; the generic workspace chooses neither. SQLite is an
+optional dependency and can be omitted at installation. Strict internal-link
+validation is a repository publishing policy, distinct from minimum OKF
+conformance and forward-compatible metadata handling.

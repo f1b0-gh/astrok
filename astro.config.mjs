@@ -1,7 +1,7 @@
 import { defineConfig } from 'astro/config';
 import { copyFile, mkdir } from 'node:fs/promises';
 import starlight from '@astrojs/starlight';
-import { okfIntegration } from './lib/site/integration.mjs';
+import { okfIntegration } from '@astrok/astro';
 
 export default defineConfig({
   site: process.env.SITE_URL,
@@ -9,7 +9,7 @@ export default defineConfig({
   trailingSlash: 'always',
   publicDir: './.generated/public',
   integrations: [
-    okfIntegration(),
+    okfIntegration({ graph: true }),
     {
       name: 'astrok-example-icon',
       hooks: {

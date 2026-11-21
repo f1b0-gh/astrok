@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 import { parseArgs } from 'node:util';
 import { readFile } from 'node:fs/promises';
-import { KnowledgeGraph } from '../backend/graph/memory.ts';
-import { publishIndex } from '../backend/graph/publish.ts';
-import { atomicWrite, assertOutside, physicalPath } from '../backend/graph/files.ts';
-import type { Filters } from '../backend/graph/query-core.ts';
-import type { SqliteKnowledgeIndex } from '../backend/graph/query.ts';
+import { KnowledgeGraph } from '@astrok/okf/graph';
+import { publishIndex } from '@astrok/okf/graph';
+import { atomicWrite, assertOutside, physicalPath } from '@astrok/okf/graph';
+import type { Filters } from '@astrok/okf/graph';
+import type { SqliteKnowledgeIndex } from '@astrok/okf/sqlite';
 
 const usage = `Usage: npm run graph -- <command> [arguments] [options]
 Commands:
-  build                    Publish JSON, derived SQLite and OKF navigation guide
+  build                    Publish JSON and OKF navigation guide (SQLite is opt-in)
   info                     Show versions, counts, runtime and integrity
   get <concept-id>          Look up a node and its canonical source
   search <text>            Search document titles/descriptions/bodies
@@ -21,14 +21,14 @@ Options:
   --root <directory>       Canonical OKF bundle (default knowledge)
   --json <file>            Query a published JSON snapshot instead
   --db <file>              Explicitly build/query a SQLite WASM snapshot
-  --sqlite                 Publish SQLite (default; build only)
+  --sqlite                 Publish SQLite (opt-in; build only)
   --no-sqlite              Publish OKF/JSON only, without loading WASM (build only)
   --public-dir <directory> Publication destination (build only)
   --output <file>          JSON destination (export only; otherwise stdout)
   --direction out|in|both --family reference|similar|near|leads_to|contains|expresses
   --relation <id> --context <name> --origin structural|explicit|inferred
   --limit <n> --depth <n> --max-nodes <n> --max-edges <n>
-Default queries require no SQL engine. Builds also derive SQLite unless --no-sqlite.
+Queries and builds require no SQL engine by default. Use --sqlite or OKF_SQLITE=1 to opt in.
 `;
 try {
   const names = ['root', 'json', 'db', 'public-dir', 'output', 'direction', 'family', 'relation', 'context', 'origin', 'limit', 'depth', 'max-nodes', 'max-edges'];
@@ -54,14 +54,14 @@ try {
     if (string('output') && command !== 'export') throw new Error('--output is only supported by export');
     let index: KnowledgeGraph | SqliteKnowledgeIndex;
     if (command === 'build' && !database) {
-      const result = await publishIndex({ root, publicDir: string('public-dir'), sqlite: values.sqlite === true || !values['no-sqlite'] && process.env.OKF_SQLITE !== '0' });
+      const result = await publishIndex({ root, publicDir: string('public-dir'), sqlite: values.sqlite === true || !values['no-sqlite'] && process.env.OKF_SQLITE === '1' });
       index = KnowledgeGraph.fromJSON(result.graph);
     } else if (database) {
       if (command === 'build') {
-        const { compileIndex } = await import('../backend/graph/compiler.ts');
+        const { compileIndex } = await import('@astrok/okf/sqlite');
         await compileIndex({ root, database });
       }
-      const { SqliteKnowledgeIndex } = await import('../backend/graph/query.ts');
+      const { SqliteKnowledgeIndex } = await import('@astrok/okf/sqlite');
       index = await SqliteKnowledgeIndex.open(database);
     } else if (jsonFile) index = KnowledgeGraph.fromJSON(JSON.parse(await readFile(jsonFile, 'utf8')));
     else index = await KnowledgeGraph.open(root);

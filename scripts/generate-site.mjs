@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-import { generateSite } from '../lib/site/generate.mjs';
-import { publishIndex } from '../backend/graph/publish.ts';
+import { generateSite } from '@astrok/okf/site';
+import { publishIndex } from '@astrok/okf/graph';
 try {
   const bundle = await generateSite();
-  await publishIndex({ bundle, sqlite: process.env.OKF_SQLITE !== '0' });
+  await publishIndex({ bundle, sqlite: process.env.OKF_SQLITE === '1' });
   for (const warning of bundle.warnings) console.warn(`WARN ${warning}`);
   console.log(`Generated ${bundle.documents.length} OKF documents and raw Markdown exports.`);
 } catch (error) {

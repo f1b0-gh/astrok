@@ -143,7 +143,7 @@ test('stale hypermedia unmount preserves a remount and final disposal stops obse
       return { clicks: input.clicks };
     });
     const root = document.createElement('section');
-    root.innerHTML = '<button data-on:click="$clicks = $clicks + 1">Original</button>';
+    root.innerHTML = '<button data-on:click="increment">Original</button>';
     document.body.append(root);
     const NativeMutationObserver = window.MutationObserver;
     let callbacks = 0;
@@ -151,7 +151,7 @@ test('stale hypermedia unmount preserves a remount and final disposal stops obse
     window.MutationObserver = class extends NativeMutationObserver {
       constructor(callback) { super((records, observer) => { callbacks++; callback(records, observer); }); }
     };
-    const hypermedia = createHypermedia(shared, { allowedPaths: [] });
+    const hypermedia = createHypermedia(shared, { allowedPaths: [], handlers: { increment: { run: (state) => { state.clicks++; } } } });
     try {
       const staleUnmount = hypermedia.mount(root);
       staleUnmount();
@@ -160,7 +160,7 @@ test('stale hypermedia unmount preserves a remount and final disposal stops obse
       root.querySelector('button').click();
       const afterStaleUnmount = shared.state.clicks;
       const added = document.createElement('button');
-      added.setAttribute('data-on:click', '$clicks = $clicks + 1');
+      added.setAttribute('data-on:click', 'increment');
       root.append(added);
       await new Promise(resolve => setTimeout(resolve, 0));
       added.click();

@@ -8,7 +8,7 @@ import { pageUrl } from '../okf/links.mjs';
 import { normalizeBase, withBase } from '../site/generate.mjs';
 import { queryReference } from './query-reference.ts';
 
-export async function publishIndex({ root = 'knowledge', publicDir = '.generated/public', sqlite = true, bundle, base = '/' }: { root?: string; publicDir?: string; sqlite?: boolean; bundle?: Bundle; base?: string } = {}) {
+export async function publishIndex({ root = 'knowledge', publicDir = '.generated/public', sqlite = false, bundle, base = '/' }: { root?: string; publicDir?: string; sqlite?: boolean; bundle?: Bundle; base?: string } = {}) {
   base = normalizeBase(base);
   const rebase = (text: string): string => base === '/' ? text : text.replace(/(?<![\w./])\/(?:okf|graph)\//g, match => base.slice(0, -1) + match);
   const json = path.join(publicDir, 'graph/graph.json');

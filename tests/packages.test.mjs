@@ -116,3 +116,25 @@ test('overlapping page and raw output directories are refused before publication
   const publicDir = path.join(directory, 'public');
   await assert.rejects(generateSite({ root, docsDir: publicDir, publicDir }), /overlap/);
 });
+
+test('graph and SQLite generation require explicit opt-in', async t => {
+  const { okfOptionsSchema } = await import('@astrok/astro');
+  assert.equal(okfOptionsSchema.parse({}).graph, false);
+  const { publishIndex } = await import('@astrok/okf/graph');
+  const { root, directory } = await fixture(t);
+  const publication = await publishIndex({root, publicDir: path.join(directory, 'optional-public')});
+  assert.equal(publication.database, null);
+  await assert.rejects(readFile(path.join(directory, 'optional-public/graph/knowledge.sqlite')), /ENOENT/);
+});
+
+test('default integration publishes sources without a graph directory', async t => {
+  const { okfIntegration } = await import('@astrok/astro');
+  const { root, directory } = await fixture(t);
+  const publicDir = path.join(directory, 'plain-public');
+  await okfIntegration({root, publicDir, presentation: 'plain'}).hooks['astro:config:setup']({
+    config: {root: new URL('file://' + directory + '/'), base: '/', publicDir: new URL('file://' + publicDir + '/')},
+    updateConfig() {}, logger: {info() {}, warn() {}},
+  });
+  assert.ok(JSON.parse(await readFile(path.join(publicDir, 'okf/manifest.json'), 'utf8')).documents.length);
+  await assert.rejects(readFile(path.join(publicDir, 'graph/graph.json')), /ENOENT/);
+});
