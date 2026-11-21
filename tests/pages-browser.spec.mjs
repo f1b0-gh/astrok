@@ -52,7 +52,7 @@ test('homepage explains Astrok and publishes copyable agent discovery without Ja
     await page.goto(`${baseURL}${base}`);
     await expect(page.getByRole('heading', {name: 'Astrok', exact: true})).toBeVisible();
     await expect(page.locator('main')).toContainText('Write your docs once, in Markdown.');
-    await expect(page.getByRole('link', {name: 'installation instructions'})).toHaveAttribute('href', /github.com\/f1b0-gh\/astrok#use-it/);
+    await expect(page.getByRole('link', {name: 'installation instructions'})).toHaveAttribute('href', 'https://github.com/f1b0-gh/astrok/blob/main/knowledge/getting-started.md#use-it-in-your-astro-project');
     const manifest = await (await request.get(`${base}okf/manifest.json`)).json();
     await expect(page.locator('main')).toContainText(`${manifest.documents.length} Markdown files`);
     await expect(page.locator('script')).toHaveCount(0);
