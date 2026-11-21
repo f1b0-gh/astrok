@@ -8,8 +8,7 @@ interactions. Packages use the `@astrokjs` scope.
 
 [**See the live demo →**](https://f1b0-gh.github.io/astrok/)
 
-> **Status: early development (0.1.0-beta.1).** Use a checkout or locally packed packages; a public
-> npm release is not available yet. APIs may change.
+> **Status: beta (0.1.0-beta.1).** Available on npm under the `next` tag. APIs may change.
 
 ## Why
 
@@ -78,9 +77,14 @@ Open <http://127.0.0.1:4341/workspace/> for guides and interactive demos.
 
 ## Use it in your Astro project
 
+With Node 24 and a compatible Astro 7 project:
+
+```sh
+npm install @astrokjs/astro@next @astrokjs/okf@next @astrojs/markdown-remark@7.3.9
+```
+
 Follow the [installation guide](knowledge/getting-started.md#use-it-in-your-astro-project) for the
-package install, Astro configuration and plain-page route. Until the first npm release, it uses
-local tarballs built from this repository.
+Astro configuration and required plain-page route.
 
 ### Optional interactions
 
