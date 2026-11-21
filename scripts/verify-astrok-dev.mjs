@@ -19,6 +19,7 @@ const server = spawn(process.execPath, ['dev.mjs'], { cwd: consumer, env: { ...p
 const frames = [];
 const consoleMessages = [];
 const pageErrors = [];
+const moduleFailures = [];
 let browser;
 async function waitUntil(condition, timeout, message) {
   const deadline = Date.now() + timeout;
@@ -41,6 +42,11 @@ try {
   const page = await browser.newPage();
   page.on('console', message => consoleMessages.push(`${message.type()}: ${message.text()}`));
   page.on('pageerror', error => pageErrors.push(error.message));
+  page.on('response', response => {
+    if (new URL(response.url()).pathname.startsWith('/.client/workspace.js') && response.status() >= 400) {
+      moduleFailures.push({url: response.url(), status: response.status()});
+    }
+  });
   page.on('websocket', socket => socket.on('framereceived', ({ payload }) => {
     const frame = JSON.parse(String(payload));
     if (frame.type !== 'custom') frames.push(frame);
@@ -48,15 +54,20 @@ try {
   await page.goto(`${origin}/workspace/`);
   await page.getByRole('button', { name: 'Load rows', exact: true }).first().waitFor();
   await waitUntil(() => frames.some(frame => frame.type === 'connected'), 5000, 'Vite browser WebSocket did not connect');
-  const beforeEdit = frames.length;
-  await writeFile(file, edited);
-  await page.getByRole('button', { name: 'Reload rows', exact: true }).first().waitFor({ timeout: 20000 });
-  assert.ok(frames.slice(beforeEdit).some(frame => frame.type === 'full-reload' || frame.updates?.some(update => update.acceptedPath?.includes('/.client/workspace.js'))), 'Expected a browser HMR or reload frame for the compiler output');
-  const first = page.locator('[data-workspace="first"]');
-  await first.getByRole('button', { name: 'Count click' }).click();
-  await page.waitForFunction(() => document.querySelector('[data-workspace="first"] [data-clicks]')?.textContent === '1');
+  for (const source of [edited, original, edited]) {
+    const beforeEdit = frames.length;
+    await writeFile(file, source);
+    const label = source === original ? 'Load rows' : 'Reload rows';
+    await page.getByRole('button', { name: label, exact: true }).first().waitFor({ timeout: 20000 });
+    assert.ok(frames.slice(beforeEdit).some(frame => frame.type === 'full-reload' || frame.updates?.some(update => update.acceptedPath?.includes('/.client/workspace.js'))), 'Expected a browser HMR or reload frame for the compiler output');
+    const first = page.locator('[data-workspace="first"]');
+    await first.getByRole('button', { name: 'Count click' }).click();
+    await page.waitForFunction(() => document.querySelector('[data-workspace="first"] [data-clicks]')?.textContent === '1');
+  }
+  assert.deepEqual(moduleFailures, [], 'Generated modules must stay available throughout rebuilds');
   await page.goto(`${origin}/solid/`);
   await page.locator('[data-counter="first"] button').waitFor();
+  await page.locator('astro-island[client="visible"]').scrollIntoViewIfNeeded();
   await page.waitForFunction(() => document.querySelectorAll('astro-island[ssr]').length === 0);
   const nativeEdited = nativeOriginal.replace('Count {props.name}', 'Updated {props.name}');
   assert.notEqual(nativeEdited, nativeOriginal);
@@ -72,6 +83,7 @@ try {
   console.error('Browser Vite frames:', JSON.stringify(frames));
   console.error('Browser console:', consoleMessages.join('\n'));
   console.error('Browser errors:', pageErrors.join('\n'));
+  console.error('Generated module failures:', JSON.stringify(moduleFailures));
   throw error;
 } finally {
   await browser?.close();

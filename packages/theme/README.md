@@ -18,10 +18,14 @@ variables (`--text-h1-size`, `--text-h1-leading`, etc.). `tokens.json` retains t
 original values. Logos are exported as `@astrok/theme/logos/<filename>.svg`; use
 the dark colored mark only on dark backgrounds and the ink mark on light ones.
 
-`fonts.css` requests Sora, Inter and JetBrains Mono from Google Fonts with
-`display=swap`. No font files are embedded; the supplied local fallback families
-remain usable offline. This stylesheet is opt-in for consumers that self-host
-fonts or disallow external stylesheets.
+`fonts.css` bundles Sora 600, Inter 400/500/600/700 and JetBrains Mono 400/500
+as local WOFF2 files, with `font-display: swap` and upstream Unicode ranges.
+Astro/Vite emits them as same-origin assets with the deployment base. No Google
+Fonts stylesheet, preconnect or runtime request is needed. Fontsource 5.3.0
+packages are pinned build dependencies only; installed theme tarballs contain
+all font files and their SIL Open Font License notices under `dist/fonts/`.
+Local fallback families still apply while fonts load or for unsupported glyphs.
+Omit `fonts.css` if you prefer your own typography.
 
 The source light `control-border` stays unchanged. Consumers placing controls on
 raised/hover surfaces use the adapter `--control-border-on-raised` (#80828E in

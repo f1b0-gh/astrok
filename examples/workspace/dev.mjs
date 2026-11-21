@@ -6,7 +6,9 @@ import { dev } from 'astro';
 process.env.NODE_ENV = 'development';
 
 // Keep Solid compilation independent while making edits visible to Astro dev.
-const watcher = await build({ build: { watch: {} } });
+// Astro can request the previous module while a second rebuild is starting.
+// Keep it available; production builds still clean their output normally.
+const watcher = await build({ build: { watch: {}, emptyOutDir: false } });
 await new Promise((resolve, reject) => {
   const ready = event => {
     if (event.code === 'ERROR') { watcher.off('event', ready); reject(event.error); }

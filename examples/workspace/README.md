@@ -1,7 +1,8 @@
 # Astrok workspace example
 
 The `knowledge/` directory is canonical for this example. Plain Astro renders
-its pages and publishes raw Markdown plus an agent manifest. The workspace uses
+its pages and publishes raw Markdown, an agent manifest, `llms.txt` and a JSON
+graph. This demo explicitly enables the graph; SQLite stays off. The workspace uses
 two separate state instances. Within each, HTML controls and a Solid component
 share native Solid state; a synthetic service supplies exact-ID rows, SSE signal
 patches and trusted HTML fragments. The table reveals at most 100 more rows per
@@ -24,11 +25,15 @@ use Astro client navigation; Home and Guide remain static documentation.
 For development, `npm run dev --workspace @astrok/example-workspace` watches the
 independent Solid build and runs Astro on loopback port 4341. It is a frontend
 development server; use the fixture preview to exercise the synthetic data API.
+Watch rebuilds retain the previous compiled module so concurrent Astro requests
+do not see a missing file. Production builds still clean their output.
 Compiled-entry edits reload the development interface; persistent hot-edit state
 is not promised. Production navigation explicitly disposes the previous workspace.
 
 To exercise a deployment prefix, set `ASTROK_BASE=/portal/` for both build and
-preview. Service URLs and raw/source links use that base. Astro owns the final
+preview. Service URLs and raw/source links use that base. Set `ASTROK_SITE` to the public
+origin for copyable agent prompts; local builds default to the preview origin
+`http://127.0.0.1:4338`. Astro owns the final
 hashed assets: the intermediate `.client/` directory contains externalized ESM
 for Astro to bundle, and is not a standalone browser distribution.
 

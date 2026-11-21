@@ -42,7 +42,7 @@ Strict links are a publishing policy, not an extra OKF schema rule.
 
 The documentation example opts into the JSON graph. SQLite generation is off
 by default; use `OKF_SQLITE=1 npm run build:docs` or `npm run index:sqlite` to
-request it. The plain workspace opts out of both graph and SQLite output.
+request it. The plain workspace also enables the JSON graph, with SQLite disabled.
 
 To try the public packages in another local project before an npm release,
 run `npm run build:packages` and pack the four packages as shown in

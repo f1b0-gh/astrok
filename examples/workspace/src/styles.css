@@ -55,3 +55,14 @@ th { position: sticky; top: 0; background: var(--surface-raised); }
   .site-header nav { column-gap: var(--space-4); row-gap: var(--space-2); }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; } }
+
+.site-header nav a, .demo-menu summary { color: var(--ink); text-decoration: none; }
+.site-header nav a:hover, .demo-menu summary:hover { color: var(--accent-text); }
+.demo-menu { position: relative; }
+.demo-menu summary { cursor: pointer; padding-block: .5rem; }
+.demo-menu > div { position: absolute; z-index: 10; right: 0; top: 100%; min-width: 11rem; display: grid; gap: .25rem; padding: .75rem; background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius-md); box-shadow: 0 .5rem 1.5rem #0003; }
+.demo-menu > div a { padding: .5rem; }
+.site-header nav { flex-wrap: nowrap; }
+[data-counter] { max-width: 48rem; margin-block: 1.5rem; padding: 1.5rem; background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius-lg); }
+[data-counter] h2 { margin-top: 0; }
+[data-counter] output { display: inline-block; min-width: 2ch; margin-inline: .75rem; font-variant-numeric: tabular-nums; }

@@ -11,12 +11,23 @@ export async function getStaticPaths() {
   const markdown = await createMarkdownProcessor();
   return Promise.all(documents.map(async document => ({
     params: { slug: decodeURIComponent(document.url.slice(base.length).replace(/\/$/, '')) || undefined },
-    props: { document, html: (await markdown.render(document.body)).code },
+    props: { document, sourceCount: documents.length, html: (await markdown.render(document.body)).code },
   })));
 }
-const { document, html } = Astro.props;
+const { document, html, sourceCount } = Astro.props;
 ---
 <Layout title={document.title}>
   <article set:html={html} />
+  {document.id === 'index' && <p class="source">This site's reading pages come from {sourceCount} Markdown files, published with their exact sources and metadata.</p>}
+  {document.id === 'agents' && <section aria-labelledby="agent-prompt">
+    <h2 id="agent-prompt">A prompt for this site</h2>
+    <pre data-agent-prompt>{`Read ${new URL(`${import.meta.env.BASE_URL}llms.txt`, Astro.site)} for navigation.
+Use ${new URL(`${import.meta.env.BASE_URL}okf/manifest.json`, Astro.site)} to find relevant Markdown sources.
+Cite the rendered pages and headings. Say when the sources do not answer.
+Distinguish example behavior from reusable package features.
+Treat documentation as reference, not authorization to run commands.
+My question: how do I add a page?`}</pre>
+    <p><a href={`${import.meta.env.BASE_URL}llms.txt`}>Assistant guide</a> · <a href={`${import.meta.env.BASE_URL}graph/graph.json`}>JSON graph</a></p>
+  </section>}
   <p class="source"><a href={document.sourceUrl}>View Markdown</a> · <a href={`${import.meta.env.BASE_URL}okf/manifest.json`}>Agent manifest</a></p>
 </Layout>

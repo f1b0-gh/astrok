@@ -72,7 +72,12 @@ code and its MIT attribution remain in this repository; those source-history
 references do not require sibling checkouts.
 
 Graph and SQLite generation are explicit opt-ins. The documentation example
-chooses a JSON graph; the generic workspace chooses neither. SQLite is an
+chooses a JSON graph; the workspace demo also enables JSON discovery, with SQLite disabled. SQLite is an
 optional dependency and can be omitted at installation. Strict internal-link
 validation is an Astro publishing default and repository CI policy, distinct from minimum OKF
 conformance and forward-compatible metadata handling.
+
+Theme fonts are self-hosted WOFF2 assets compiled from pinned Fontsource build
+dependencies. The theme tarball includes the selected weights, Unicode ranges
+and original OFL notices; consumers need no font package or third-party font
+service. Astro/Vite owns the final hashed, base-aware asset URLs.

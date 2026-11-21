@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Introduce Astrok on the demo homepage with installation and source discovery.
+  Enable the demo's JSON graph and `llms.txt`, with deployment-aware agent prompts.
+- Explain hosted service limits and Solid loading modes, simplify navigation and
+  use English throughout the design preview.
+- Bundle licensed font assets in the theme, replacing Google Fonts requests.
+
 - Remove Astrok ownership marker copies from deployed Astro output while
   retaining generated-source markers for repeat builds. Complete the plain-mode
   README quickstart with a Markdown renderer, page route and Git ignore guidance.
