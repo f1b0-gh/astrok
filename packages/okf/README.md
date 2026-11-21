@@ -1,4 +1,4 @@
-# @astrok/okf
+# @astrokjs/okf
 
 Read OKF 0.3 bundles, publish their Markdown sources and build an optional graph.
 Unknown types and nested metadata are preserved. Markdown without a non-empty
@@ -14,7 +14,7 @@ The root exports `readBundle`, `parseSource` (`parseDocument` is an alias),
 Only verification events at or after `generated.at` count. Unparseable deadlines
 return `freshness: 'malformed'`. It does not execute computations or attest values.
 
-`@astrok/okf/site` exports `loadSite({ root, base, strictLinks })`, returning
+`@astrokjs/okf/site` exports `loadSite({ root, base, strictLinks })`, returning
 `{ bundle, documents, manifest, pages, raw }`. Documents contain source IDs,
 metadata, transformed Markdown bodies without frontmatter, page URLs and raw
 source URLs. A plain Astro route can render those bodies using its Markdown
@@ -38,8 +38,8 @@ runs can prune those directories. Existing directories without the marker,
 canonical source ancestors/descendants and symbolic links are refused. Use fresh,
 dedicated generated output paths; do not add caller-authored files to them.
 
-`@astrok/okf/graph` exports the SQL-free graph and Node publication helpers.
-`@astrok/okf/sqlite` explicitly loads the optional SQLite WASM dependency.
+`@astrokjs/okf/graph` exports the SQL-free graph and Node publication helpers.
+`@astrokjs/okf/sqlite` explicitly loads the optional SQLite WASM dependency.
 `publishIndex()` defaults to SQL-free JSON publication; opt in with
 `publishIndex({ sqlite: true })`. Install with `npm ci --omit=optional` to omit
 optional dependencies, including SQLite (and optional hypermedia dependencies). These are Node
@@ -52,7 +52,7 @@ and <=0.2 bundles may fall back to the bundle root. SQLite schema 3 migrates the
 previous evidence table; JSON snapshots use schema 2 and readers still accept
 schema 1. Index/log navigation nodes are not concepts.
 
-Build with Node 24 and `npm run build --workspace=@astrok/okf` before packing.
+Build with Node 24 and `npm run build --workspace=@astrokjs/okf` before packing.
 The package contains executable ESM plus generated declarations, including an
 explicit declaration-specifier rewrite after TypeScript compilation. Parser/site
 JavaScript remains maintained JavaScript; graph TypeScript is not duplicated.

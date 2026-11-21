@@ -129,7 +129,7 @@ test('stale hypermedia unmount preserves a remount and final disposal stops obse
     plugins: [{
       name: 'astrok-lifecycle-test-entry',
       resolveId(id) { if (id === entry) return entry; },
-      load(id) { if (id === entry) return 'export {createHypermedia} from "@astrok/runtime/hypermedia"; export {createSharedState} from "@astrok/runtime";'; },
+      load(id) { if (id === entry) return 'export {createHypermedia} from "@astrokjs/runtime/hypermedia"; export {createSharedState} from "@astrokjs/runtime";'; },
     }],
     build: { write: false, lib: { entry, formats: ['es'] } },
   });

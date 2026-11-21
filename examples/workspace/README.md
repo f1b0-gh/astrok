@@ -13,8 +13,8 @@ From the repository root, using Node 24:
 ```sh
 npm ci
 npm run build:packages
-npm run build --workspace @astrok/example-workspace
-npm run preview --workspace @astrok/example-workspace
+npm run build --workspace @astrokjs/example-workspace
+npm run preview --workspace @astrokjs/example-workspace
 ```
 
 The synthetic preview binds loopback port 4338. Open `/workspace/` for shared controls, or `/solid/` for native SSR and hydration; documentation
@@ -22,7 +22,7 @@ and source downloads also work when JavaScript is disabled. The streaming servic
 is part of `fixture.mjs`, not the framework. Main and alternate workspace routes
 use Astro client navigation; Home and Guide remain static documentation.
 
-For development, `npm run dev --workspace @astrok/example-workspace` watches the
+For development, `npm run dev --workspace @astrokjs/example-workspace` watches the
 independent Solid build and runs Astro on loopback port 4341. It is a frontend
 development server; use the fixture preview to exercise the synthetic data API.
 Watch rebuilds retain the previous compiled module so concurrent Astro requests

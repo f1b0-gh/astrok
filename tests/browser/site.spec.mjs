@@ -76,7 +76,7 @@ test('navigation is accessible on desktop and mobile', async ({ page, isMobile }
 });
 
 test('published OKF graph supports SQL-free queries and source navigation', async ({ request }) => {
-  const { KnowledgeGraph } = await import('@astrok/okf/graph');
+  const { KnowledgeGraph } = await import('@astrokjs/okf/graph');
   const response = await request.get('/graph/graph.json');
   expect(response.status()).toBe(200);
   const index = KnowledgeGraph.fromJSON(await response.json());

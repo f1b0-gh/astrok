@@ -33,7 +33,7 @@ async function renderToStaticMarkup(this: RenderContext, component: unknown, pro
 
 export default {
   // This integration's native compiler owns JSX in the consuming Astro project.
-  check: async (component: unknown): Promise<boolean> => typeof component === 'function' && Reflect.get(component, Symbol.for('astro:renderer')) === '@astrok/solid',
+  check: async (component: unknown): Promise<boolean> => typeof component === 'function' && Reflect.get(component, Symbol.for('astro:renderer')) === '@astrokjs/solid',
   renderToStaticMarkup,
   supportsAstroStaticSlot: true,
   renderHydrationScript: (): string => generateHydrationScript(),

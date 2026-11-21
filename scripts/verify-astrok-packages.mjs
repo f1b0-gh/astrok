@@ -50,12 +50,12 @@ try {
   }
   for (const name of packages) {
     const packageManifest = JSON.parse(await readFile(path.join(project, 'packages', name, 'package.json'), 'utf8'));
-    const filename = `astrok-${name}-${packageManifest.version}.tgz`;
+    const filename = `${packageManifest.name.replace('@', '').replace('/', '-')}-${packageManifest.version}.tgz`;
     const bytes = await readFile(path.join(artifacts, filename));
     await writeFile(path.join(consumer, 'vendor', filename), bytes);
     const specifier = `file:vendor/${filename}`;
-    manifest.dependencies[`@astrok/${name}`] = specifier;
-    entries[`node_modules/@astrok/${name}`] = {
+    manifest.dependencies[`@astrokjs/${name}`] = specifier;
+    entries[`node_modules/@astrokjs/${name}`] = {
       version: packageManifest.version,
       resolved: specifier,
       integrity: 'sha512-' + createHash('sha512').update(bytes).digest('base64'),
@@ -70,21 +70,21 @@ try {
   await run('npm', ['ci', '--no-audit', '--no-fund', ...offline], consumer);
   await run('npm', ['run', 'check'], consumer);
   await run('npm', ['run', 'build'], consumer);
-  await writeFile(path.join(consumer, 'contracts.ts'), `import {parseSource, readMetadata} from '@astrok/okf';
-import {okfIntegration} from '@astrok/astro';
+  await writeFile(path.join(consumer, 'contracts.ts'), `import {parseSource, readMetadata} from '@astrokjs/okf';
+import {okfIntegration} from '@astrokjs/astro';
 okfIntegration({strictLinks: true});
 okfIntegration({strictLinks: false});
 // @ts-expect-error strictLinks accepts booleans only.
 okfIntegration({strictLinks: 'false'});
-import {loadSite, generateSite} from '@astrok/okf/site';
+import {loadSite, generateSite} from '@astrokjs/okf/site';
 const strictSite = loadSite({root: 'knowledge', strictLinks: true});
 const warningSite = generateSite({root: 'knowledge', strictLinks: false});
 // @ts-expect-error strictLinks accepts booleans only.
 loadSite({strictLinks: 'true'});
-import {createFieldState, createSharedState, type ElementPatch, type SharedState, type RequestState} from '@astrok/runtime';
-import {createHypermedia, type HypermediaHandler} from '@astrok/runtime/hypermedia';
+import {createFieldState, createSharedState, type ElementPatch, type SharedState, type RequestState} from '@astrokjs/runtime';
+import {createHypermedia, type HypermediaHandler} from '@astrokjs/runtime/hypermedia';
 // @ts-expect-error Executable attribute compilation is no longer a public API.
-import {compileAttribute} from '@astrok/runtime/hypermedia';
+import {compileAttribute} from '@astrokjs/runtime/hypermedia';
 const shared = createSharedState({count: 0}, value => value as {count: number});
 createHypermedia(shared, {allowedPaths: [], handlers: {
   count: {run: state => state.count.toFixed()},
@@ -110,7 +110,7 @@ fields.updateField('missing', () => 1);
 fields.updateField('count', () => 'wrong');
 // @ts-expect-error Each field needs its own decoder.
 createFieldState({note: '', count: 0}, {count: Number});
-import {KnowledgeGraph} from '@astrok/okf/graph';
+import {KnowledgeGraph} from '@astrokjs/okf/graph';
 const document = parseSource('---\\ntype: Future\\n---\\nBody','topic.md');
 const state = readMetadata({verified: {by: 'human:reviewer', at: '2026-11-20'}});
 const tier: 'unverified' | 'machine-confirmed' | 'human-reviewed' = state.trustTier;
@@ -122,7 +122,7 @@ export type Contracts = [typeof document, typeof integration, typeof graph, Shar
   for (const [module, resolution] of [['NodeNext', 'NodeNext'], ['ESNext', 'Bundler']]) {
     await run(process.execPath, ['node_modules/typescript/bin/tsc', '--ignoreConfig', '--noEmit', '--strict', '--exactOptionalPropertyTypes', '--target', 'ES2023', '--module', module, '--moduleResolution', resolution, '--skipLibCheck', 'contracts.ts'], consumer);
   }
-  await writeFile(path.join(consumer, 'smoke.mjs'), `import assert from 'node:assert/strict'; import {parseSource, readMetadata} from '@astrok/okf'; const r=parseSource(${JSON.stringify('---\ntype: Future\ncustom: {nested: true}\n---\nBody')},'topic.md'); assert.equal(r.errors.length,0); assert.equal(r.document.metadata.custom.nested,true); assert.equal(parseSource('Notes','README.md').document,null); assert.equal(readMetadata({stale_after:'invalid'}).freshness,'malformed');\n`);
+  await writeFile(path.join(consumer, 'smoke.mjs'), `import assert from 'node:assert/strict'; import {parseSource, readMetadata} from '@astrokjs/okf'; const r=parseSource(${JSON.stringify('---\ntype: Future\ncustom: {nested: true}\n---\nBody')},'topic.md'); assert.equal(r.errors.length,0); assert.equal(r.document.metadata.custom.nested,true); assert.equal(parseSource('Notes','README.md').document,null); assert.equal(readMetadata({stale_after:'invalid'}).freshness,'malformed');\n`);
   await run(process.execPath, ['smoke.mjs'], consumer);
   await run(process.execPath, [path.join(project, 'scripts/verify-astrok-links.mjs'), consumer]);
   // Reuse the maintained browser cases, but the server and files come only from

@@ -1,5 +1,5 @@
-@import '@astrok/theme/fonts.css';
-@import '@astrok/theme/tokens.css';
+@import '@astrokjs/theme/fonts.css';
+@import '@astrokjs/theme/tokens.css';
 
 :root { font-family: var(--font-sans); font-size: var(--text-body-size); line-height: 1.625; color: var(--ink); background: var(--ground); }
 * { box-sizing: border-box; }

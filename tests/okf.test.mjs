@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { readBundle } from '@astrok/okf';
+import { readBundle } from '@astrokjs/okf';
 
 async function bundle(t, files) {
   const root = await mkdtemp(path.join(tmpdir(), 'okf-test-'));

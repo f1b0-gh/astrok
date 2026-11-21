@@ -1,6 +1,6 @@
 import { defineConfig } from 'astro/config';
-import { solidIntegration } from '@astrok/astro/solid';
-import { okfIntegration } from '@astrok/astro';
+import { solidIntegration } from '@astrokjs/astro/solid';
+import { okfIntegration } from '@astrokjs/astro';
 
 export default defineConfig({
   output: 'static',

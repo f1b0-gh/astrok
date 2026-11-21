@@ -1,5 +1,5 @@
 {
-  "name": "@astrok/astro",
+  "name": "@astrokjs/astro",
   "version": "0.1.0",
   "type": "module",
   "description": "Configurable OKF publication for Astro with optional Starlight presentation",
@@ -38,7 +38,7 @@
     "check": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@astrok/okf": "0.1.0",
+    "@astrokjs/okf": "0.1.0",
     "magic-string": "1.4.5",
     "zod": "4.6.7"
   },
@@ -67,5 +67,17 @@
       "optional": true
     }
   },
-  "license": "MIT OR Apache-2.0"
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/f1b0-gh/astrok.git",
+    "directory": "packages/astro"
+  },
+  "homepage": "https://github.com/f1b0-gh/astrok/tree/main/packages/astro#readme",
+  "bugs": {
+    "url": "https://github.com/f1b0-gh/astrok/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

@@ -24,6 +24,6 @@ test('renderer markers cover named, default and anonymous local function exports
     const result = transform(source);
     assert.ok(result?.map);
     const exports = await load(result.code);
-    assert.equal((exports.default ?? exports.Counter)[Symbol.for('astro:renderer')], '@astrok/solid');
+    assert.equal((exports.default ?? exports.Counter)[Symbol.for('astro:renderer')], '@astrokjs/solid');
   }
 });

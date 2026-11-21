@@ -2,21 +2,21 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 test('native Solid integration registers separate server and browser renderers', async () => {
-  const { solidIntegration } = await import('@astrok/astro/solid');
+  const { solidIntegration } = await import('@astrokjs/astro/solid');
   const integration = solidIntegration();
   let renderer, update;
   await integration.hooks['astro:config:setup']({
     addRenderer: value => { renderer = value; },
     updateConfig: value => { update = value; },
   });
-  assert.equal(renderer.name, '@astrok/solid');
+  assert.equal(renderer.name, '@astrokjs/solid');
   assert.match(renderer.serverEntrypoint, /solid\/server/);
   assert.match(renderer.clientEntrypoint, /solid\/client/);
   assert.ok(update.vite.plugins.length);
 });
 
 test('server renderer assigns per-request IDs, preserves slots', async () => {
-  const { default: renderer } = await import('@astrok/astro/solid/server');
+  const { default: renderer } = await import('@astrokjs/astro/solid/server');
   const { ssr } = await import('@solidjs/web');
   const component = props => [props.label, props.children, props.title];
   const context = { result: { request: new Request('https://example.test/') } };
@@ -35,15 +35,15 @@ test('server renderer assigns per-request IDs, preserves slots', async () => {
 
 
 test('the Solid renderer does not claim unrelated component functions', async () => {
-  const { default: renderer } = await import('@astrok/astro/solid/server');
+  const { default: renderer } = await import('@astrokjs/astro/solid/server');
   assert.equal(await renderer.check(() => ({ foreign: true })), false);
   const component = () => 'Solid';
-  Object.defineProperty(component, Symbol.for('astro:renderer'), { value: '@astrok/solid' });
+  Object.defineProperty(component, Symbol.for('astro:renderer'), { value: '@astrokjs/solid' });
   assert.equal(await renderer.check(component), true);
 });
 
 test('buffered async rendering surfaces undefined rejections and cancellation', async () => {
-  const { default: renderer } = await import('@astrok/astro/solid/server');
+  const { default: renderer } = await import('@astrokjs/astro/solid/server');
   const { transform } = await import('@solidjs/compiler');
   const source = `import {createMemo, Loading} from 'solid-js';
 export default function Failing() { const value = createMemo(() => Promise.reject(undefined)); return <Loading fallback={<p>Waiting</p>}><p>{value()}</p></Loading>; }`;

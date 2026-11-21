@@ -16,7 +16,7 @@ export default defineConfig({
     { name: 'mobile', use: { ...devices['Pixel 7'] } },
   ],
   webServer: {
-    command: 'npm exec --workspace @astrok/example-workspace -- astro preview --host 127.0.0.1 --port 4342 --ignore-lock',
+    command: 'npm exec --workspace @astrokjs/example-workspace -- astro preview --host 127.0.0.1 --port 4342 --ignore-lock',
     url: `http://127.0.0.1:4342${base}`,
     reuseExistingServer: false,
   },

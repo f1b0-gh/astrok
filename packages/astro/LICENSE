@@ -5,5 +5,5 @@ Astrok is licensed under either of the following, at your option:
 
 SPDX-License-Identifier: MIT OR Apache-2.0
 
-Third-party code retains its own license notices. The imported @astrok/runtime
+Third-party code retains its own license notices. The imported @astrokjs/runtime
 package remains MIT-licensed; see its LICENSE.

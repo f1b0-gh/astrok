@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Move public packages and examples to the `@astrokjs` npm scope. Update imports,
+  workspace dependencies and tarball installation instructions together. Add
+  repository metadata and explicit public access for future npm releases.
+
 - Introduce Astrok on the demo homepage with installation and source discovery.
   Enable the demo's JSON graph and `llms.txt`, with deployment-aware agent prompts.
 - Explain hosted service limits and Solid loading modes, simplify navigation and

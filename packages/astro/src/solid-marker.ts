@@ -40,7 +40,7 @@ export function solidMarker(): ReturnType<typeof solid>[number] {
           for (const specifier of node.specifiers) if (specifier.local.type === 'Identifier' && owned.has(specifier.local.name)) exported.add(specifier.local.name);
         }
       }
-      for (const name of exported) output.append(`\nif (typeof ${name} === 'function') Object.defineProperty(${name}, Symbol.for('astro:renderer'), {value:'@astrok/solid', configurable:true});`);
+      for (const name of exported) output.append(`\nif (typeof ${name} === 'function') Object.defineProperty(${name}, Symbol.for('astro:renderer'), {value:'@astrokjs/solid', configurable:true});`);
       return exported.size ? { code: output.toString(), map: output.generateMap({ hires: true, source: id, includeContent: true }) } : null;
     },
   };

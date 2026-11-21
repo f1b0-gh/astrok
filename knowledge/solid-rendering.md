@@ -5,7 +5,7 @@ description: Add server-rendered Solid 2 components and hydrate them with Astro 
 ---
 # Render Solid components
 
-Add `solidIntegration()` from `@astrok/astro/solid` to your Astro configuration.
+Add `solidIntegration()` from `@astrokjs/astro/solid` to your Astro configuration.
 In this repository, the workspace example already has it configured. Run
 `npm run dev` and open `/solid/`.
 
@@ -19,7 +19,7 @@ import Counter from '../components/Counter';
 The server sends the component's HTML. Astro loads its browser module and Solid
 attaches reactive behavior to the existing elements. Omit `client:load` when you
 only need HTML. Other choices are `client:idle`, `client:visible`,
-`client:media="(min-width: 800px)"`, or `client:only="@astrok/solid"` when a component
+`client:media="(min-width: 800px)"`, or `client:only="@astrokjs/solid"` when a component
 cannot run on the server.
 
 Keep state inside the component or its owned context. Module-level state would
