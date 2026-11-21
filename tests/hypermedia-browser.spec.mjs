@@ -771,3 +771,86 @@ test('morph refresh skips ignored subtrees and initializes new bindings once', a
   });
   expect(result).toEqual({ ignored: 1, added: 1, text: 'preservedadded' });
 });
+
+test('mounting a detached region initializes bindings before insertion', async ({ page }) => {
+  const result = await page.evaluate(async () => {
+    const { createHypermedia, createSharedState, flush } = await import('/__hypermedia_test__.js');
+    const shared = createSharedState({ count: 2 }, (value) => value);
+    const root = document.createElement('section');
+    root.innerHTML =
+      '<span data-text="count"></span><button data-on:click="increment">Add</button>';
+    const html = createHypermedia(shared, {
+      allowedPaths: [],
+      handlers: {
+        count: { run: (state) => state.count },
+        increment: {
+          run: (state) => {
+            state.count++;
+          },
+        },
+      },
+    });
+    try {
+      html.mount(root);
+      flush();
+      const detached = root.firstElementChild.textContent;
+      document.body.append(root);
+      root.querySelector('button').click();
+      flush();
+      return { detached, inserted: root.firstElementChild.textContent, count: shared.state.count };
+    } finally {
+      html.dispose();
+      shared.dispose();
+      root.remove();
+    }
+  });
+  expect(result).toEqual({ detached: '2', inserted: '3', count: 3 });
+});
+
+test('option patches restore ancestor select bindings without rerunning effects', async ({
+  page,
+}) => {
+  const result = await page.evaluate(async () => {
+    const { createHypermedia, createSharedState, flush } = await import('/__hypermedia_test__.js');
+    const shared = createSharedState({ choice: 'a' }, (value) => value);
+    const root = document.createElement('section');
+    root.innerHTML =
+      '<select id="bound-choice" data-bind="choice" data-effect="effect"><option value="a">A</option></select>';
+    document.body.append(root);
+    let effects = 0;
+    const html = createHypermedia(shared, {
+      allowedPaths: [],
+      handlers: {
+        effect: {
+          watch: [],
+          run: () => {
+            effects++;
+          },
+        },
+      },
+    });
+    try {
+      html.mount(root);
+      flush();
+      const select = root.firstElementChild;
+      html.applyElements({
+        selector: '#bound-choice',
+        mode: 'append',
+        elements: '<option id="added-choice" value="b" selected>B</option>',
+      });
+      flush();
+      const appended = select.value;
+      html.applyElements({
+        selector: '#added-choice',
+        elements: '<option id="added-choice" value="c" selected>C</option>',
+      });
+      flush();
+      return { appended, morphed: select.value, choice: shared.state.choice, effects };
+    } finally {
+      html.dispose();
+      shared.dispose();
+      root.remove();
+    }
+  });
+  expect(result).toEqual({ appended: 'a', morphed: 'a', choice: 'a', effects: 1 });
+});

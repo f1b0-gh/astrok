@@ -90,7 +90,7 @@ export function createHypermedia<T extends Record<string, unknown>>(
     signature: string;
     attributes: Map<string, string>;
     dispose: () => void;
-    refresh: (textOnly: boolean) => void;
+    refresh: (childrenOnly: boolean) => void;
   };
   const bindings = new Map<Element, Binding>();
   const requests = new Map<Element, AbortController>();
@@ -147,7 +147,7 @@ export function createHypermedia<T extends Record<string, unknown>>(
     return runWithOwner(null, () =>
       createRoot((dispose) => {
         const [revision, setRevision] = createSignal(0);
-        const [textRevision, setTextRevision] = createSignal(0);
+        const [childrenRevision, setChildrenRevision] = createSignal(0);
         const cleanups: (() => void)[] = [];
         onCleanup(() => {
           requests.get(el)?.abort();
@@ -195,6 +195,7 @@ export function createHypermedia<T extends Record<string, unknown>>(
               createEffect(
                 () => {
                   revision();
+                  childrenRevision();
                   return readPath(shared.state, path);
                 },
                 (value) => {
@@ -226,7 +227,7 @@ export function createHypermedia<T extends Record<string, unknown>>(
               createEffect(
                 () => {
                   revision();
-                  if (kind === 'text') textRevision();
+                  if (kind === 'text') childrenRevision();
                   return handler.run(shared.state, actions(el), el);
                 },
                 (value) => {
@@ -251,8 +252,8 @@ export function createHypermedia<T extends Record<string, unknown>>(
         }
         return {
           dispose,
-          refresh: (textOnly: boolean) => {
-            if (textOnly) setTextRevision((n) => n + 1);
+          refresh: (childrenOnly: boolean) => {
+            if (childrenOnly) setChildrenRevision((n) => n + 1);
             else setRevision((n) => n + 1);
           },
         };
@@ -266,7 +267,6 @@ export function createHypermedia<T extends Record<string, unknown>>(
         bindings.delete(el);
       }
     for (const root of regions) {
-      if (!root.isConnected) continue;
       for (const el of [root, ...root.querySelectorAll('*')]) {
         if (el.closest('[data-ignore]') || protectedNode(el)) continue;
         const attrs = Array.from(el.attributes).filter((a) => supported(a.name));
@@ -363,21 +363,21 @@ export function createHypermedia<T extends Record<string, unknown>>(
       throw new Error('Cannot remove or replace a region boundary');
     // Capture existing owners before mutation. Replaced/new bindings initialize in
     // scan(); only surviving owners need their unchanged values reapplied.
-    const affected = new Map<Element, { entry: Binding; textOnly: boolean }>();
+    const affected = new Map<Element, { entry: Binding; childrenOnly: boolean }>();
     const capture = (target: Element | null, full: boolean) => {
       if (!target) return;
       const entry = bindings.get(target);
-      if (full && entry) affected.set(target, { entry, textOnly: false });
-      // Child mutations can overwrite a parent's text output, but must not
-      // rerun its event/effect/attribute bindings merely because it is an ancestor.
+      if (full && entry) affected.set(target, { entry, childrenOnly: false });
+      // Child mutations can overwrite text or change a selected option. Refresh
+      // those outputs without rerunning ancestor effects or attribute handlers.
       for (let el: Element | null = target; el; el = el.parentElement) {
         const ancestor = bindings.get(el);
         if (
           ancestor &&
           !affected.has(el) &&
-          [...ancestor.attributes.keys()].some((name) => /^data-text(:|__|$)/.test(name))
+          [...ancestor.attributes.keys()].some((name) => /^data-(text|bind)(:|__|$)/.test(name))
         )
-          affected.set(el, { entry: ancestor, textOnly: true });
+          affected.set(el, { entry: ancestor, childrenOnly: true });
       }
     };
     try {
@@ -477,8 +477,9 @@ export function createHypermedia<T extends Record<string, unknown>>(
       try {
         scan();
       } finally {
-        for (const [el, { entry, textOnly }] of affected)
-          if (bindings.get(el) === entry && el.isConnected && inside(el)) entry.refresh(textOnly);
+        for (const [el, { entry, childrenOnly }] of affected)
+          if (bindings.get(el) === entry && el.isConnected && inside(el))
+            entry.refresh(childrenOnly);
       }
     }
   }
