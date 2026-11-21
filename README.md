@@ -16,7 +16,7 @@ static guides, hydrated counters, shared controls and a design-system preview.
 
 ## Try it
 
-[Open the preview](https://f1b0-gh.github.io/astrok/workspace/).
+[Open the preview](https://f1b0-gh.github.io/astrok/).
 
 To run it locally with Node 24:
 
