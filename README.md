@@ -98,8 +98,36 @@ Other things to try:
 
 ## Use it in your Astro project
 
-After installing locally packed packages (see [Build and test](BUILDING.md)),
-add the integration to `astro.config.mjs`:
+Until the npm release, install from local tarballs. With Node 24, run these
+commands in the Astrok checkout from [Try it](#try-it):
+
+```sh
+npm ci
+npm run build:packages
+mkdir -p artifacts/local
+npm pack ./packages/okf --ignore-scripts --pack-destination artifacts/local
+npm pack ./packages/astro --ignore-scripts --pack-destination artifacts/local
+```
+
+Then install both tarballs together in your existing Astro project. Replace
+these absolute paths with your local paths:
+
+```sh
+ASTROK_PACKAGES=/absolute/path/to/astrok/artifacts/local
+cd /absolute/path/to/your-astro-project
+npm install astro@7.4.13 \
+  "$ASTROK_PACKAGES/astrok-okf-0.1.0.tgz" \
+  "$ASTROK_PACKAGES/astrok-astro-0.1.0.tgz"
+```
+
+Installing both together resolves Astrok's internal dependency locally. These
+versions match the current package requirements. The setup below uses plain
+Astro. For Starlight presentation, install `@astrojs/starlight@0.43.1` and
+configure its integration and content collection. Use this repository's
+[Astro config](astro.config.mjs) and [collection config](src/content.config.ts)
+as references. See [Build and test](BUILDING.md) for the verification workflow.
+
+Add the integration to `astro.config.mjs`:
 
 ```js
 import { defineConfig } from 'astro/config';
@@ -122,6 +150,15 @@ routes using `loadSite()` from `@astrok/okf/site`; the
 generated folders it owns and refuses to overwrite anything else.
 
 ### Add interactive components
+
+Install the Solid runtime and build tools in your Astro project:
+
+```sh
+npm install solid-js@2.0.0 @solidjs/web@2.0.0
+npm install --save-dev @solidjs/compiler@2.0.0 @solidjs/vite-plugin@3.0.1
+```
+
+Then add the Solid integration:
 
 ```js
 import { solidIntegration } from '@astrok/astro/solid';
