@@ -72,6 +72,15 @@ try {
   await run('npm', ['run', 'build'], consumer);
   await writeFile(path.join(consumer, 'contracts.ts'), `import {parseSource, readMetadata} from '@astrok/okf';
 import {okfIntegration} from '@astrok/astro';
+okfIntegration({strictLinks: true});
+okfIntegration({strictLinks: false});
+// @ts-expect-error strictLinks accepts booleans only.
+okfIntegration({strictLinks: 'false'});
+import {loadSite, generateSite} from '@astrok/okf/site';
+const strictSite = loadSite({root: 'knowledge', strictLinks: true});
+const warningSite = generateSite({root: 'knowledge', strictLinks: false});
+// @ts-expect-error strictLinks accepts booleans only.
+loadSite({strictLinks: 'true'});
 import {createFieldState, createSharedState, type ElementPatch, type SharedState, type RequestState} from '@astrok/runtime';
 import {createHypermedia, type HypermediaHandler} from '@astrok/runtime/hypermedia';
 // @ts-expect-error Executable attribute compilation is no longer a public API.
@@ -115,6 +124,7 @@ export type Contracts = [typeof document, typeof integration, typeof graph, Shar
   }
   await writeFile(path.join(consumer, 'smoke.mjs'), `import assert from 'node:assert/strict'; import {parseSource, readMetadata} from '@astrok/okf'; const r=parseSource(${JSON.stringify('---\ntype: Future\ncustom: {nested: true}\n---\nBody')},'topic.md'); assert.equal(r.errors.length,0); assert.equal(r.document.metadata.custom.nested,true); assert.equal(parseSource('Notes','README.md').document,null); assert.equal(readMetadata({stale_after:'invalid'}).freshness,'malformed');\n`);
   await run(process.execPath, ['smoke.mjs'], consumer);
+  await run(process.execPath, [path.join(project, 'scripts/verify-astrok-links.mjs'), consumer]);
   // Reuse the maintained browser cases, but the server and files come only from
   // the independent consumer. This is a local tarball install, not npm publication.
   const browserConfig = path.join(project, 'playwright.astrok.config.mjs');

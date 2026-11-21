@@ -23,7 +23,12 @@ export interface Bundle {
   documents: Document[]; assets: Map<string, Uint8Array>; errors: string[]; warnings: string[];
 }
 export interface SiteDocument extends Document { url: string; sourceUrl: string }
-export interface SiteOptions { root?: string; base?: string }
+export interface SiteOptions {
+  root?: string;
+  base?: string;
+  /** Reject link diagnostics before publication; defaults to false in low-level helpers. */
+  strictLinks?: boolean;
+}
 export interface GenerateOptions extends SiteOptions { docsDir?: string; publicDir?: string; presentation?: 'plain' | 'starlight' }
 export interface ManifestDocument extends Omit<SiteDocument, 'body' | 'source'> {}
 export interface SiteManifest { format: 'okf-site-manifest'; version: 1; documents: ManifestDocument[] }

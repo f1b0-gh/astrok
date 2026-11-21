@@ -138,3 +138,115 @@ test('default integration publishes sources without a graph directory', async t 
   assert.ok(JSON.parse(await readFile(path.join(publicDir, 'okf/manifest.json'), 'utf8')).documents.length);
   await assert.rejects(readFile(path.join(publicDir, 'graph/graph.json')), /ENOENT/);
 });
+
+test('integration rejects invalid links by default before publishing plain or Starlight output', async t => {
+  const { okfIntegration, okfOptionsSchema } = await import('@astrok/astro');
+  assert.equal(okfOptionsSchema.parse({}).strictLinks, true);
+  assert.throws(() => okfIntegration({strictLinks: 'false'}), /strictLinks/);
+  for (const presentation of ['plain', 'starlight']) {
+    const {root, directory} = await fixture(t);
+    await writeFile(path.join(root, 'topic.md'), '---\ntype: Guide\n---\n# Topic\n[Missing](missing.md)\n[Heading](other.md#gone)\n');
+    const publicDir = path.join(directory, 'public');
+    await assert.rejects(okfIntegration({root, publicDir, presentation, graph: true}).hooks['astro:config:setup']({
+      config: {root: new URL('file://' + directory + '/'), base: '/', publicDir: new URL('file://' + publicDir + '/')},
+      updateConfig() {}, logger: {info() {}, warn() {}},
+    }), error => /topic.md:5: missing target missing.md/.test(error.message) && /topic.md:6: missing heading #gone/.test(error.message));
+    await assert.rejects(readFile(path.join(publicDir, 'okf/manifest.json')), /ENOENT/);
+    await assert.rejects(readFile(path.join(publicDir, 'graph/.astrok-owned.json')), /ENOENT/);
+    await assert.rejects(readFile(path.join(directory, 'src/content/docs/.astrok-owned.json')), /ENOENT/);
+  }
+});
+
+test('integration warning-only opt-out still reports bad links and strict mode allows unrelated warnings', async t => {
+  const {okfIntegration} = await import('@astrok/astro');
+  const {root, directory} = await fixture(t);
+  await writeFile(path.join(root, 'topic.md'), '---\ntype: Guide\n---\n[Missing](missing.md)\n');
+  const publicDir = path.join(directory, 'public');
+  const warnings = [];
+  const setup = options => okfIntegration({root, publicDir, presentation: 'plain', ...options}).hooks['astro:config:setup']({
+    config: {root: new URL('file://' + directory + '/'), base: '/', publicDir: new URL('file://' + publicDir + '/')},
+    updateConfig() {}, logger: {info() {}, warn(message) {warnings.push(message);}},
+  });
+  await setup({strictLinks: false});
+  assert.ok(warnings.some(message => message.includes('missing target missing.md')));
+  assert.ok(JSON.parse(await readFile(path.join(publicDir, 'okf/manifest.json'), 'utf8')).documents.length);
+  warnings.length = 0;
+  await writeFile(path.join(root, 'topic.md'), source);
+  await writeFile(path.join(root, 'untyped.md'), '# Untyped note\n');
+  await setup({});
+  assert.ok(warnings.some(message => message.includes('untyped.md')));
+});
+
+test('strict integration reports invalid source edits and recovers without replacing good output', {timeout: 10000}, async t => {
+  const {EventEmitter} = await import('node:events');
+  const {okfIntegration} = await import('@astrok/astro');
+  const {root, directory} = await fixture(t);
+  const publicDir = path.join(directory, 'public');
+  let update;
+  let recovered = () => {};
+  let failed = () => {};
+  const errors = [];
+  await okfIntegration({root, publicDir, presentation: 'plain'}).hooks['astro:config:setup']({
+    config: {root: new URL('file://' + directory + '/'), base: '/', publicDir: new URL('file://' + publicDir + '/')},
+    updateConfig(value) {update = value;},
+    logger: {info() {}, warn() {}, error(message) {errors.push(message);}},
+  });
+  const watcher = new EventEmitter(); watcher.add = () => {};
+  const httpServer = new EventEmitter();
+  update.vite.plugins[0].configureServer({watcher, httpServer, ws: {send(event) {if (event.type === 'full-reload') recovered(); else failed(event);}}});
+  const output = path.join(publicDir, 'okf/topic.md');
+  const before = await readFile(output, 'utf8');
+  const failure = new Promise(resolve => {failed = resolve;});
+  await writeFile(path.join(root, 'topic.md'), '---\ntype: Guide\n---\n[Missing](missing.md)\n');
+  watcher.emit('all', 'change', path.join(root, 'topic.md'));
+  const event = await failure;
+  assert.equal(event.type, 'error');
+  assert.match(event.err.message, /Invalid internal links/);
+  assert.equal(errors.length, 1);
+  assert.equal(await readFile(output, 'utf8'), before);
+  const recovery = new Promise(resolve => {recovered = resolve;});
+  await writeFile(path.join(root, 'topic.md'), source);
+  watcher.emit('all', 'change', path.join(root, 'topic.md'));
+  await recovery;
+  assert.equal(await readFile(output, 'utf8'), before);
+  httpServer.emit('close');
+  assert.equal(watcher.listenerCount('all'), 0);
+});
+
+test('build output omits owned markers while retaining source ownership and caller files', async t => {
+  const {okfIntegration} = await import('@astrok/astro');
+  const {cp} = await import('node:fs/promises');
+  const {pathToFileURL} = await import('node:url');
+  for (const graph of [false, true]) {
+    const {root, directory} = await fixture(t);
+    const publicDir = path.join(directory, 'public');
+    const outputDir = path.join(directory, 'custom-output/client');
+    const integration = okfIntegration({root, publicDir, presentation: 'plain', graph});
+    const setup = () => integration.hooks['astro:config:setup']({
+      config: {root: pathToFileURL(directory + '/'), base: '/', publicDir: pathToFileURL(publicDir + '/')},
+      updateConfig() {}, logger: {info() {}, warn() {}},
+    });
+    await setup();
+    await mkdir(path.join(publicDir, 'caller'));
+    await writeFile(path.join(publicDir, 'caller/.astrok-owned.json'), 'caller data');
+    if (!graph) {
+      await mkdir(path.join(publicDir, 'graph'));
+      await writeFile(path.join(publicDir, 'graph/.astrok-owned.json'), 'caller graph');
+    }
+    await cp(publicDir, outputDir, {recursive: true});
+    const finish = () => integration.hooks['astro:build:generated']({dir: pathToFileURL(outputDir + '/')});
+    await finish();
+    await finish(); // Missing copied markers are harmless.
+    for (const name of ['okf', ...(graph ? ['graph'] : [])]) {
+      await assert.rejects(readFile(path.join(outputDir, name, '.astrok-owned.json')), /ENOENT/);
+      assert.match(await readFile(path.join(publicDir, name, '.astrok-owned.json'), 'utf8'), /@astrok\/okf/);
+    }
+    assert.equal(await readFile(path.join(outputDir, 'caller/.astrok-owned.json'), 'utf8'), 'caller data');
+    if (!graph) assert.equal(await readFile(path.join(outputDir, 'graph/.astrok-owned.json'), 'utf8'), 'caller graph');
+    assert.equal(await readFile(path.join(outputDir, 'okf/topic.md'), 'utf8'), source);
+    await setup(); // Original markers still authorize the next generation.
+    await writeFile(path.join(outputDir, 'okf/.astrok-owned.json'), 'different owner');
+    await finish();
+    assert.equal(await readFile(path.join(outputDir, 'okf/.astrok-owned.json'), 'utf8'), 'different owner');
+  }
+});

@@ -32,7 +32,9 @@ Source generation only owns fresh/empty or previously marked directories.
 `publicDir/okf` and `publicDir/graph` must be dedicated generated projections;
 `llms.txt` belongs to the graph publication. Other public assets remain caller
 owned. Preserve `.astrok-owned.json` between generations. The public package does not claim arbitrary populated directories; legacy
-unmarked output must be rebuilt in fresh generated directories.
+unmarked output must be rebuilt in fresh generated directories. Ownership markers
+stay in generated source directories for repeat builds; the integration removes
+its marker copies from the resolved client build output before deployment.
 
 `graph` defaults to false. Set `graph: true` for JSON publication. SQLite is
 also opt-in: set `sqlite: true` or `OKF_SQLITE=1` with graph enabled; an explicit
@@ -40,6 +42,14 @@ also opt-in: set `sqlite: true` or `OKF_SQLITE=1` with graph enabled; an explici
 Setting `graph: false` skips graph publication. Explicitly choose fresh output
 paths when changing publication policy; no broad caller-directory cleanup occurs.
 
+
+`strictLinks` defaults to true: invalid internal targets, headings, assets,
+malformed links and paths escaping the bundle fail Astro setup/build before
+publication, with source paths and lines. Existing generated output is retained.
+Set `strictLinks: false` for warning-only link checks. Other metadata warnings
+remain advisory; external URLs are not fetched. During development, invalid
+source edits show an error overlay; fixing the links regenerates output and
+reloads the page, including when restoring the previous valid source.
 
 ## Native Solid 2
 

@@ -29,10 +29,6 @@ relationship queries, or Solid 2 interactions. For a prose-only site that just
 needs a list of links for assistants, plain Starlight with an `llms.txt` plugin
 may be enough.
 
-For example, `knowledge/api/auth.md` becomes a page at `/api/auth/`, the exact
-source at `/okf/api/auth.md`, and a manifest entry with the stable `api/auth`
-ID, metadata and resolved links. All three come from the same Markdown file.
-
 ## What you get from one Markdown file
 
 Given `knowledge/first-page.md`:
@@ -52,18 +48,20 @@ the build publishes:
 
 | Output | URL | For |
 | --- | --- | --- |
-| Rendered page | `/first-page/` | People |
+| Rendered page¹ | `/first-page/` | People |
 | Original Markdown | `/okf/first-page.md` | Agents, downloads, citations |
 | Manifest entry | `/okf/manifest.json` | Agents: IDs, titles, metadata, links, URLs |
 | Assistant guide (graph enabled) | `/llms.txt` | Navigation and citation guidance |
 | Graph (opt-in) | `/graph/graph.json` | Page relationships |
 | SQLite index (opt-in) | `/graph/knowledge.sqlite` | Relationship queries |
 
-The Astro integration warns about broken internal links and missing headings;
-these warnings **do not fail your build**. In this repository,
-`npm run validate:okf` enables `--strict` on `scripts/validate-okf.mjs` so link
-warnings fail CI. That script defaults to warning-only link checks and is not
-included in the packages. Astrok does not currently ship a validation CLI.
+¹ Rendered pages require Starlight or your own Astro route, such as the
+plain-mode route below. Sources and the manifest are published in both modes.
+
+Broken internal links and missing headings **fail the build** by default.
+Set `strictLinks: false` to log warnings instead. External URLs are not fetched;
+unrelated metadata warnings remain advisory. See [Build and test](BUILDING.md)
+for this repository's validation commands.
 
 The YAML front matter is kept in the source but never shown on the rendered
 page.
@@ -115,7 +113,7 @@ these absolute paths with your local paths:
 ```sh
 ASTROK_PACKAGES=/absolute/path/to/astrok/artifacts/local
 cd /absolute/path/to/your-astro-project
-npm install astro@7.4.13 \
+npm install astro@7.4.13 @astrojs/markdown-remark@7.3.9 \
   "$ASTROK_PACKAGES/astrok-okf-0.1.0.tgz" \
   "$ASTROK_PACKAGES/astrok-astro-0.1.0.tgz"
 ```
@@ -144,10 +142,49 @@ export default defineConfig({
 });
 ```
 
-With `presentation: 'plain'`, render the pages yourself from your own Astro
-routes using `loadSite()` from `@astrok/okf/site`; the
-[workspace example](examples/workspace/) shows how. Astrok writes only to
-generated folders it owns and refuses to overwrite anything else.
+Plain mode writes generated sources to `public/okf/` by default. Add
+`/public/okf/` to your project's `.gitignore` (and `/public/graph/` plus
+`/public/llms.txt` if you enable the graph). Alternatively, set
+`publicDir: './.generated/public'` and ignore `/.generated/`; this changes
+Astro's public directory too, so keep any other public assets there.
+
+Plain mode needs a page route. Create `src/pages/[...slug].astro`:
+
+```astro
+---
+import type { GetStaticPaths } from 'astro';
+import { loadSite, normalizeBase } from '@astrok/okf/site';
+import { createMarkdownProcessor } from '@astrojs/markdown-remark';
+export const getStaticPaths = (async () => {
+  const base = normalizeBase(import.meta.env.BASE_URL);
+  const { documents } = await loadSite({ root: 'knowledge', base });
+  const markdown = await createMarkdownProcessor();
+  return Promise.all(documents.map(async doc => ({
+    params: {
+      slug: decodeURIComponent(doc.url.slice(base.length).replace(/\/$/, '')) ||
+        undefined,
+    },
+    props: { title: doc.title, html: (await markdown.render(doc.body)).code },
+  })));
+}) satisfies GetStaticPaths;
+const { title, html } = Astro.props;
+---
+<html lang="en">
+  <head><meta charset="utf-8" /><title>{title}</title></head>
+  <body><main set:html={html} /></body>
+</html>
+```
+
+This renders `knowledge/first-page.md` at `/first-page/`, with frontmatter
+removed and Markdown links resolved. Keep the route's `root` aligned with the
+integration. An existing `src/pages/index.astro` takes precedence over the
+bundle's home page; remove it if the bundle should supply `/`. The earlier
+example also links to `index.md`, so create `knowledge/index.md` with
+`# Home` and a list item `- [First page](first-page.md)` before building.
+
+Astrok writes only to generated folders it owns and refuses to overwrite
+anything else. The [workspace example](examples/workspace/) adds a layout
+and links to the original Markdown.
 
 ### Add interactive components
 

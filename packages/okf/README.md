@@ -14,7 +14,7 @@ The root exports `readBundle`, `parseSource` (`parseDocument` is an alias),
 Only verification events at or after `generated.at` count. Unparseable deadlines
 return `freshness: 'malformed'`. It does not execute computations or attest values.
 
-`@astrok/okf/site` exports `loadSite({ root, base })`, returning
+`@astrok/okf/site` exports `loadSite({ root, base, strictLinks })`, returning
 `{ bundle, documents, manifest, pages, raw }`. Documents contain source IDs,
 metadata, transformed Markdown bodies without frontmatter, page URLs and raw
 source URLs. A plain Astro route can render those bodies using its Markdown
@@ -22,6 +22,16 @@ renderer. `generateSite` also accepts `docsDir`, `publicDir` and
 `presentation: 'plain' | 'starlight'` and publishes raw sources and the manifest;
 plain mode skips generated Starlight content. URL prefixes do not change disk
 paths: `/portal/okf/topic.md` is still published at `publicDir/okf/topic.md`.
+
+`strictLinks: true` makes `loadSite` and `generateSite` reject unresolved local
+links, missing headings, malformed URLs and paths that escape the bundle.
+Diagnostics include source paths and line numbers. Validation happens before
+claiming or changing generated output, so rejected edits preserve the last good
+publication. External URLs are not fetched or checked for availability.
+
+The low-level helpers default to `strictLinks: false`, retaining link warnings
+in the returned bundle. Other warnings, such as skipped untyped Markdown, remain
+non-fatal in strict mode. Unknown OKF metadata and types are still preserved.
 
 Outputs claim absent or empty directories with `.astrok-owned.json`; subsequent
 runs can prune those directories. Existing directories without the marker,

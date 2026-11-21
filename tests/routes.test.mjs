@@ -43,6 +43,10 @@ test('clean installation builds canonical routes and refreshes source edits in d
     const html = await readFile(destination, 'utf8');
     assert.ok(!html.includes('custom: {untouched: true}'));
   }
+  for (const name of ['okf', 'graph']) {
+    await assert.rejects(readFile(path.join(root, 'dist', name, '.astrok-owned.json')), /ENOENT/);
+    assert.match(await readFile(path.join(root, '.generated/public', name, '.astrok-owned.json'), 'utf8'), /@astrok\/okf/);
+  }
   const nested = await readFile(path.join(root, 'dist/nested/index.html'), 'utf8');
   assert.match(nested, /href="\/Guide%20One\/#a-heading"/);
 

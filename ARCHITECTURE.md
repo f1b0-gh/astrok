@@ -13,7 +13,17 @@ interactive components; a graph index is optional.
 Each site owns its Markdown bundle. `knowledge/` contains the Astrok user guide;
 `examples/workspace/knowledge/` belongs to the workspace demo. The build derives
 pages, raw Markdown, a discovery manifest and, when enabled, JSON/SQLite graphs.
-Generated files are disposable; edits belong in the source bundle.
+Generated files are disposable; edits belong in the source bundle. Ownership
+markers stay beside generated sources but are removed from the resolved Astro
+client output in `astro:build:generated`; only Astrok's own marker copies in
+`okf/` and the enabled `graph/` publication are removed.
+
+Site publication supports `strictLinks: true` to reject resolved-link diagnostics
+before touching generated output. The Astro integration enables it by default;
+`strictLinks: false` restores warning-only behavior. Development errors preserve
+the previous output and recovery reloads the page. Low-level helpers default to warnings;
+strictness is a publishing policy, not a change to OKF conformance. Unrelated
+metadata warnings remain advisory, and external URLs are not fetched.
 
 Astro builds Solid components for the server and browser. Components render to
 HTML on the server; `client:*` directives opt into browser hydration. The
@@ -64,5 +74,5 @@ references do not require sibling checkouts.
 Graph and SQLite generation are explicit opt-ins. The documentation example
 chooses a JSON graph; the generic workspace chooses neither. SQLite is an
 optional dependency and can be omitted at installation. Strict internal-link
-validation is a repository publishing policy, distinct from minimum OKF
+validation is an Astro publishing default and repository CI policy, distinct from minimum OKF
 conformance and forward-compatible metadata handling.

@@ -36,7 +36,9 @@ package prerequisites automatically, including after a fresh `npm ci`.
 `npm run validate:okf` checks every maintained bundle in strict link mode, and
 CI runs it through `npm run verify`. For minimum conformance with link warnings
 only, run `node scripts/validate-okf.mjs knowledge` after building packages.
-Strict links are a project publishing policy, not an extra OKF schema rule.
+Consumer Astro builds also fail on invalid internal links by default. Set
+`strictLinks: false` on `okfIntegration` to retain warnings without failing.
+Strict links are a publishing policy, not an extra OKF schema rule.
 
 The documentation example opts into the JSON graph. SQLite generation is off
 by default; use `OKF_SQLITE=1 npm run build:docs` or `npm run index:sqlite` to
