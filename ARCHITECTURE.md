@@ -16,7 +16,9 @@ pages, raw Markdown, a discovery manifest and, when enabled, JSON/SQLite graphs.
 Generated files are disposable; edits belong in the source bundle.
 
 Site publication supports `strictLinks: true` to reject resolved-link diagnostics
-before touching generated output. The low-level site helpers default to warnings;
+before touching generated output. The Astro integration enables it by default;
+`strictLinks: false` restores warning-only behavior. Development errors preserve
+the previous output and recovery reloads the page. Low-level helpers default to warnings;
 strictness is a publishing policy, not a change to OKF conformance. Unrelated
 metadata warnings remain advisory, and external URLs are not fetched.
 
@@ -69,5 +71,5 @@ references do not require sibling checkouts.
 Graph and SQLite generation are explicit opt-ins. The documentation example
 chooses a JSON graph; the generic workspace chooses neither. SQLite is an
 optional dependency and can be omitted at installation. Strict internal-link
-validation is a repository publishing policy, distinct from minimum OKF
+validation is an Astro publishing default and repository CI policy, distinct from minimum OKF
 conformance and forward-compatible metadata handling.

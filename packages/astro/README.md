@@ -41,6 +41,14 @@ Setting `graph: false` skips graph publication. Explicitly choose fresh output
 paths when changing publication policy; no broad caller-directory cleanup occurs.
 
 
+`strictLinks` defaults to true: invalid internal targets, headings, assets,
+malformed links and paths escaping the bundle fail Astro setup/build before
+publication, with source paths and lines. Existing generated output is retained.
+Set `strictLinks: false` for warning-only link checks. Other metadata warnings
+remain advisory; external URLs are not fetched. During development, invalid
+source edits show an error overlay; fixing the links regenerates output and
+reloads the page, including when restoring the previous valid source.
+
 ## Native Solid 2
 
 ```js

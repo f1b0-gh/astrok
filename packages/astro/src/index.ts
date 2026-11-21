@@ -11,6 +11,7 @@ export const okfOptionsSchema = z.strictObject({
   publicDir: z.string().min(1).optional(),
   base: z.string().refine(value => { try { normalizeBase(value); return true; } catch { return false; } }, 'Expected an absolute URL path without traversal').optional(),
   graph: z.boolean().default(false),
+  strictLinks: z.boolean().default(true),
   sqlite: z.boolean().optional(),
   presentation: z.enum(['plain', 'starlight']).default('starlight'),
 });
@@ -46,7 +47,7 @@ export function okfIntegration(options: OkfOptions = {}): AstroIntegration {
             if (guideExists && !hasOwner) throw new Error('Generated llms.txt ownership is required before replacement');
             await assertOwnedDirectory(root, path.join(publicDir, 'graph'), false);
           }
-          const bundle = await generateSite({ root, docsDir, publicDir, base, presentation: parsed.presentation });
+          const bundle = await generateSite({ root, docsDir, publicDir, base, presentation: parsed.presentation, strictLinks: parsed.strictLinks });
           if (parsed.graph) {
             await assertOwnedDirectory(root, path.join(publicDir, 'graph'), true);
             const { publishIndex } = await import('@astrok/okf/graph');
@@ -61,10 +62,19 @@ export function okfIntegration(options: OkfOptions = {}): AstroIntegration {
           configureServer(server) {
             server.watcher.add(root);
             let queue = Promise.resolve();
+            let generationFailed = false;
             const onChange = (_event: string, file: string): void => {
               const relative = path.relative(root, path.resolve(file));
               if (relative.startsWith('..' + path.sep) || relative === '..' || path.isAbsolute(relative)) return;
-              queue = queue.then(generate).catch((error: unknown) => {
+              queue = queue.then(async () => {
+                await generate();
+                if (generationFailed) {
+                  generationFailed = false;
+                  // Restoring identical source writes no files, but must clear the overlay.
+                  server.ws.send({ type: 'full-reload' });
+                }
+              }).catch((error: unknown) => {
+                generationFailed = true;
                 const message = error instanceof Error ? error.message : String(error);
                 logger.error(message);
                 server.ws.send({ type: 'error', err: { message, stack: '' } });

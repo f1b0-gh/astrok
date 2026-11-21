@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Breaking:** Astro integration setup/build now rejects invalid internal links
+  by default, reporting source paths and lines before changing generated output.
+  Set `strictLinks: false` for the previous warning-only behavior. Low-level
+  `loadSite`/`generateSite` helpers support opt-in strict checking. Development
+  source errors preserve valid output and recover after repairs.
+
 - Add opt-in `createFieldState` with independently validated root fields.
   `updateField` and its `data-bind` path copy and validate only the changed
   branch, avoiding work on unrelated large datasets. The existing whole-state

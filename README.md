@@ -59,11 +59,16 @@ the build publishes:
 | Graph (opt-in) | `/graph/graph.json` | Page relationships |
 | SQLite index (opt-in) | `/graph/knowledge.sqlite` | Relationship queries |
 
-The Astro integration warns about broken internal links and missing headings;
-these warnings **do not fail your build**. In this repository,
-`npm run validate:okf` enables `--strict` on `scripts/validate-okf.mjs` so link
-warnings fail CI. That script defaults to warning-only link checks and is not
-included in the packages. Astrok does not currently ship a validation CLI.
+The Astro integration **fails your build** on broken internal links, missing
+headings or assets, malformed links, and links that escape the source bundle.
+Errors include the source file and line. Your normal Astro build can enforce
+these checks in CI; no separate validation command is needed. External URLs
+are not fetched, and unrelated metadata warnings remain advisory.
+
+To keep link problems as warnings, set `strictLinks: false` in
+`okfIntegration({ ... })`. Strict checking is enabled by default. In this
+repository, `npm run validate:okf` also checks all maintained bundles with
+`--strict`; that repository script is not included in the packages.
 
 The YAML front matter is kept in the source but never shown on the rendered
 page.
