@@ -28,3 +28,7 @@ For shorter runs, use `npm test` or `npm run validate:okf`.
 
 Dependencies, generated pages, build directories, archives and test reports
 stay local and are ignored by Git. Keep source files and `package-lock.json`.
+
+Repository tests and commands import the built package exports. `npm test`,
+`npm run validate:okf`, `npm run graph -- …` and `npm run generate:okf` build their
+package prerequisites automatically, including after a fresh `npm ci`.

@@ -1,7 +1,7 @@
 # @astrok/theme
 
 Shared CSS and SVG assets for every astrok example. The design source remains in
-`ressources/astrok-design-system/`; `npm run build --workspace @astrok/theme`
+`resources/astrok-design-system/`; `npm run build --workspace @astrok/theme`
 compiles that repository-relative input. Installed tarballs are self-contained:
 consumers need only the exported CSS, JSON and logos in `dist/`.
 

@@ -1,11 +1,11 @@
 import { mkdir, readFile, writeFile, copyFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
-const source = new URL('../../../ressources/astrok-design-system/', import.meta.url);
+const source = new URL('../../../resources/astrok-design-system/', import.meta.url);
 const destination = new URL('../dist/', import.meta.url);
 const tokens = JSON.parse(await readFile(new URL('tokens.json', source), 'utf8'));
 const reference = value => value.replace(/^\{([a-z-]+)\}$/, 'var(--$1)');
-const css = ['/* Generated from ressources/astrok-design-system/tokens.json. */'];
+const css = ['/* Generated from resources/astrok-design-system/tokens.json. */'];
 for (const theme of tokens.color.themes) {
   css.push(`${theme.id === 'dark' ? ':root, ' : ''}[data-theme="${theme.id}"] {`);
   css.push(`  color-scheme: ${theme.id};`);

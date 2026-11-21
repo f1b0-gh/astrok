@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, readFile, rm, access } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { generateSite } from '../lib/site/generate.mjs';
+import { generateSite } from '@astrok/okf/site';
 
 async function fixture(t, files) {
   const temp = await mkdtemp(path.join(tmpdir(), 'okf-site-'));

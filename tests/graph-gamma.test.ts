@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { readBundle } from '../lib/okf/bundle.mjs';
-import { projectGraph } from '../backend/graph/project.ts';
-import { compileIndex } from '../backend/graph/compiler.ts';
-import { SqliteKnowledgeIndex } from '../backend/graph/query.ts';
+import { readBundle } from '@astrok/okf';
+import { projectGraph } from '@astrok/okf/graph';
+import { compileIndex } from '@astrok/okf/sqlite';
+import { SqliteKnowledgeIndex } from '@astrok/okf/sqlite';
 
 const doc = (kind: string, relations = '', model = 'gamma34/0.1') => `---\ntype: Custom Domain Type\ngraph_model: ${model}\ngraph_kind: ${kind}\ncustom: {keep: true}\n${relations}---\n# Example\nSearchable café token.\n`;
 async function fixture(t: test.TestContext, files: Record<string, string>) {
@@ -54,7 +54,7 @@ test('future graph extensions stay opaque while invalid known declarations fail 
 });
 
 test('memory and SQLite agree on symmetric similarity, inverse labels, contexts and bounded paths', async t => {
-  const { KnowledgeGraph } = await import('../backend/graph/memory.ts');
+  const { KnowledgeGraph } = await import('@astrok/okf/graph');
   const options = await fixture(t, { 'a.md': doc('event', relations), 'b.md': doc('thing', 'graph_relations:\n  - {target: c.md, relation: resembles, family: near, contexts: [demo]}\n'), 'c.md': doc('concept', 'graph_relations:\n  - {target: a.md, relation: advances, inverse: follows, family: leads_to}\n') });
   const memory = await KnowledgeGraph.open(options.root);
   await compileIndex(options);
@@ -136,8 +136,8 @@ test('JSON publication and default CLI work with SQLite imports forbidden and re
 });
 
 test('automatic SQLite and JSON publication consume the exact same parsed OKF snapshot', async t => {
-  const { publishIndex } = await import('../backend/graph/publish.ts');
-  const { KnowledgeGraph } = await import('../backend/graph/memory.ts');
+  const { publishIndex } = await import('@astrok/okf/graph');
+  const { KnowledgeGraph } = await import('@astrok/okf/graph');
   const { root } = await fixture(t, { 'a.md': doc('event', relations), 'b.md': doc('thing'), 'c.md': doc('concept') });
   const bundle = await readBundle(root);
   // A subsequent disk edit must not leak into just one output of this publication.
@@ -164,7 +164,7 @@ test('automatic SQLite and JSON publication consume the exact same parsed OKF sn
 });
 
 test('failed publication preserves the previous JSON and SQLite generation', async t => {
-  const { publishIndex } = await import('../backend/graph/publish.ts');
+  const { publishIndex } = await import('@astrok/okf/graph');
   const { root } = await fixture(t, { 'a.md': doc('thing') });
   const publicDir = path.join(path.dirname(root), 'public');
   await publishIndex({ root, publicDir });
@@ -181,7 +181,7 @@ test('failed publication preserves the previous JSON and SQLite generation', asy
 });
 
 test('memory and SQLite match underscore-separated words consistently', async t => {
-  const { KnowledgeGraph } = await import('../backend/graph/memory.ts');
+  const { KnowledgeGraph } = await import('@astrok/okf/graph');
   const options = await fixture(t, { 'a.md': doc('thing').replace('Searchable café token.', 'foo_bar') });
   const memory = await KnowledgeGraph.open(options.root);
   await compileIndex(options);

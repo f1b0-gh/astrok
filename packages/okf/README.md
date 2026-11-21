@@ -44,3 +44,8 @@ Build with Node 24 and `npm run build --workspace=@astrok/okf` before packing.
 The package contains executable ESM plus generated declarations, including an
 explicit declaration-specifier rewrite after TypeScript compilation. Parser/site
 JavaScript remains maintained JavaScript; graph TypeScript is not duplicated.
+
+The graph entry point also exports `OKF_SPEC` and the Node filesystem helpers
+`atomicWrite`, `assertOutside` and `physicalPath` used by the repository CLI.
+The SQLite entry point exports `migrate` and `SCHEMA_VERSION` for migration
+verification. Repository scripts and tests consume these emitted package exports.

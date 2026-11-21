@@ -18,7 +18,7 @@ test('clean installation builds canonical routes and refreshes source edits in d
     }
     await rm(root, { recursive: true, force: true });
   });
-  for (const file of ['astro.config.mjs', 'package.json', 'package-lock.json', 'tsconfig.json', 'lib', 'backend', 'packages', 'examples/workspace/package.json', 'src/components', 'src/styles', 'src/content.config.ts']) {
+  for (const file of ['astro.config.mjs', 'package.json', 'package-lock.json', 'tsconfig.json', 'packages', 'examples/workspace/package.json', 'src/components', 'src/styles', 'src/content.config.ts']) {
     await mkdir(path.dirname(path.join(root, file)), { recursive: true });
     await cp(file, path.join(root, file), { recursive: true, filter: source => !source.split(path.sep).includes('node_modules') });
   }

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readBundle } from '../lib/okf/bundle.mjs';
+import { readBundle } from '@astrok/okf';
 
 try {
   const bundle = await readBundle(process.argv[2] ?? 'knowledge');

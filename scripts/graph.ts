@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 import { parseArgs } from 'node:util';
 import { readFile } from 'node:fs/promises';
-import { KnowledgeGraph } from '../backend/graph/memory.ts';
-import { publishIndex } from '../backend/graph/publish.ts';
-import { atomicWrite, assertOutside, physicalPath } from '../backend/graph/files.ts';
-import type { Filters } from '../backend/graph/query-core.ts';
-import type { SqliteKnowledgeIndex } from '../backend/graph/query.ts';
+import { KnowledgeGraph } from '@astrok/okf/graph';
+import { publishIndex } from '@astrok/okf/graph';
+import { atomicWrite, assertOutside, physicalPath } from '@astrok/okf/graph';
+import type { Filters } from '@astrok/okf/graph';
+import type { SqliteKnowledgeIndex } from '@astrok/okf/sqlite';
 
 const usage = `Usage: npm run graph -- <command> [arguments] [options]
 Commands:
@@ -58,10 +58,10 @@ try {
       index = KnowledgeGraph.fromJSON(result.graph);
     } else if (database) {
       if (command === 'build') {
-        const { compileIndex } = await import('../backend/graph/compiler.ts');
+        const { compileIndex } = await import('@astrok/okf/sqlite');
         await compileIndex({ root, database });
       }
-      const { SqliteKnowledgeIndex } = await import('../backend/graph/query.ts');
+      const { SqliteKnowledgeIndex } = await import('@astrok/okf/sqlite');
       index = await SqliteKnowledgeIndex.open(database);
     } else if (jsonFile) index = KnowledgeGraph.fromJSON(JSON.parse(await readFile(jsonFile, 'utf8')));
     else index = await KnowledgeGraph.open(root);
