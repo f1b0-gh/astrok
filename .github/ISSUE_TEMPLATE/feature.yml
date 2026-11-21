@@ -1,0 +1,17 @@
+name: Feature proposal
+description: Describe a problem Astrok could solve.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do, and what gets in the way?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal and alternatives
+      description: Describe the behavior you want and any workarounds you have tried.
+    validations:
+      required: true

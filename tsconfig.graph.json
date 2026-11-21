@@ -9,13 +9,8 @@
     "erasableSyntaxOnly": true,
     "allowJs": true,
     "checkJs": false,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "skipLibCheck": true
   },
-  "include": [
-    "scripts/graph.ts",
-    "tests/graph*.ts"
-  ]
+  "include": ["scripts/graph.ts", "tests/graph*.ts"]
 }

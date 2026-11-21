@@ -1,8 +1,8 @@
 # Gamma(3,4) example
 
-This small model uses a fictional SDK to show how Astrok's `gamma34/0.1`
-extension records relationships. You can read the linked pages without using
-a database or learning the extension first.
+This small model uses a fictional SDK to show how Astrok's `gamma34/0.1` extension records
+relationships. You can read the linked pages without using a database or learning the extension
+first.
 
 ## Components
 
@@ -19,8 +19,8 @@ a database or learning the extension first.
 
 - [Authentication](../authentication.md) — Explains the idea attached to the client.
 
-A `contains` relation can be read backward as `part_of`. A `similar` relation
-is valid only in its stated context. An event sequence describes ordering,
-not proof of causation. These are project conventions, separate from OKF itself.
+A `contains` relation can be read backward as `part_of`. A `similar` relation is valid only in its
+stated context. An event sequence describes ordering, not proof of causation. These are project
+conventions, separate from OKF itself.
 
 - [Graph reference](reference.md) — Fields, defaults, validation and query behavior.

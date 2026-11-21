@@ -9,16 +9,19 @@ export const collections = {
     loader: glob({
       base: './src/content/docs',
       pattern: '**/*.md',
-      generateId: ({ entry, data }) => typeof data.slug === 'string' && data.slug ? data.slug : entry.replace(/\.md$/, ''),
+      generateId: ({ entry, data }) =>
+        typeof data.slug === 'string' && data.slug ? data.slug : entry.replace(/\.md$/, ''),
     }),
     schema: docsSchema({
       extend: z.object({
-        okf: z.object({
-          sourcePath: z.string(),
-          sourceUrl: z.string(),
-          type: z.string().nullable(),
-          hasBodyTitle: z.boolean(),
-        }).optional(),
+        okf: z
+          .object({
+            sourcePath: z.string(),
+            sourceUrl: z.string(),
+            type: z.string().nullable(),
+            hasBodyTitle: z.boolean(),
+          })
+          .optional(),
       }),
     }),
   }),

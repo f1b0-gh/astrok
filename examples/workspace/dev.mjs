@@ -10,15 +10,24 @@ process.env.NODE_ENV = 'development';
 // Keep it available; production builds still clean their output normally.
 const watcher = await build({ build: { watch: {}, emptyOutDir: false } });
 await new Promise((resolve, reject) => {
-  const ready = event => {
-    if (event.code === 'ERROR') { watcher.off('event', ready); reject(event.error); }
-    if (event.code === 'END') { watcher.off('event', ready); resolve(); }
+  const ready = (event) => {
+    if (event.code === 'ERROR') {
+      watcher.off('event', ready);
+      reject(event.error);
+    }
+    if (event.code === 'END') {
+      watcher.off('event', ready);
+      resolve();
+    }
   };
   watcher.on('event', ready);
 });
 let server;
 try {
-  server = await dev({ root: process.cwd(), server: { host: '127.0.0.1', port: Number(process.env.ASTROK_DEV_PORT || 4341) } });
+  server = await dev({
+    root: process.cwd(),
+    server: { host: '127.0.0.1', port: Number(process.env.ASTROK_DEV_PORT || 4341) },
+  });
 } catch (error) {
   await watcher.close();
   throw error;
@@ -30,4 +39,7 @@ async function stop() {
   await server.stop();
   await watcher.close();
 }
-for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, () => { void stop(); });
+for (const signal of ['SIGINT', 'SIGTERM'])
+  process.once(signal, () => {
+    void stop();
+  });

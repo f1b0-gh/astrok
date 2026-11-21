@@ -53,7 +53,9 @@ jobs:
       - name: Build static sample
         env:
           ASTROK_SITE: ${{ steps.pages.outputs.origin || 'https://f1b0-gh.github.io' }}
-          ASTROK_BASE: ${{ steps.pages.outputs.base_url && format('{0}/', steps.pages.outputs.base_path) || '/astrok/' }}
+          ASTROK_BASE:
+            ${{ steps.pages.outputs.base_url && format('{0}/', steps.pages.outputs.base_path) ||
+            '/astrok/' }}
           ASTROK_STATIC_DEMO: '1'
         run: npm run build
       - run: npm run check --workspace @astrokjs/example-workspace
@@ -61,7 +63,9 @@ jobs:
       - name: Test static hosting
         env:
           ASTROK_SITE: ${{ steps.pages.outputs.origin || 'https://f1b0-gh.github.io' }}
-          ASTROK_BASE: ${{ steps.pages.outputs.base_url && format('{0}/', steps.pages.outputs.base_path) || '/astrok/' }}
+          ASTROK_BASE:
+            ${{ steps.pages.outputs.base_url && format('{0}/', steps.pages.outputs.base_path) ||
+            '/astrok/' }}
         run: npm run test:pages
       - name: Upload website
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'

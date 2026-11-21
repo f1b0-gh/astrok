@@ -5,41 +5,104 @@ const base = import.meta.env.BASE_URL;
 const staticDemo = process.env.ASTROK_STATIC_DEMO === '1';
 const { alternate = false } = Astro.props;
 ---
+
 <Layout title="Interactive workspace">
   <ClientRouter />
   <h1>{alternate ? 'Alternate workspace' : 'Interactive workspace'}</h1>
-  <p><a href={`${base}${alternate ? 'workspace/' : 'workspace/alternate/'}`}>{alternate ? 'Main workspace' : 'Alternate workspace'}</a></p>
-  <p>Compare two independent workspaces. Each shares state between HTML controls, a Solid table and a streaming summary.</p>
-  {staticDemo && <p data-static-notice>Rows and streaming are available in the local preview. Try the selection and counter controls here, or <a href={`${base}solid/`}>open the Solid components demo</a>.</p>}
-  <noscript><p role="status">The workspace requires JavaScript. <a href={`${base}guide/`}>Read the static guide</a>.</p></noscript>
-  <button id="remount" type="button">Remount workspaces</button>
+  <p>
+    <a href={`${base}${alternate ? 'workspace/' : 'workspace/alternate/'}`}>
+      {alternate ? 'Main workspace' : 'Alternate workspace'}
+    </a>
+  </p>
+  <p>
+    Compare two independent workspaces. Each shares state between HTML controls, a Solid table and a
+    streaming summary.
+  </p>
+  {staticDemo && (
+    <p data-static-notice>
+      Rows and streaming are available in the local preview. Try the selection and counter controls
+      here, or <a href={`${base}solid/`}>open the Solid components demo</a>.
+    </p>
+  )}
+  <noscript>
+    <p role="status">
+      The workspace requires JavaScript. <a href={`${base}guide/`}>Read the static guide</a>.
+    </p>
+  </noscript>
+  <button id="remount" type="button">
+    Remount workspaces
+  </button>
   <div class="workspaces">
-    {['first', 'second'].map(name => <section data-workspace={name} data-static-demo={staticDemo ? "true" : undefined} data-service={`${base}api/`}>
-      <h2>{name === 'first' ? 'First workspace' : 'Second workspace'}</h2>
-      <div data-hypermedia>
-        <label>Selection<select data-bind="selected"><option value="alpha">Alpha</option><option value="beta">Beta</option></select></label>
-        <button type="button" data-on:click="selectBeta">Select beta</button>
-        <button type="button" data-on:click="increment">Count click</button>
-        <p>Selected: <strong data-selected data-text="selected">alpha</strong> · Clicks: <span data-clicks data-text="clicks">0</span></p>
-        <p>Summary: <span data-summary data-text="summary">Preparing…</span></p>
-        <div id={`fragment-${name}`}><label>Panel note<input id={`note-${name}`} data-bind="note" value="" /></label><p data-fragment-message>{staticDemo ? 'Your note stays in this panel.' : 'Waiting for server fragment'}</p></div>
-      </div>
-      <div data-solid id={`solid-${name}`}><p>Loading interactive controls…</p></div>
-    </section>)}
+    {['first', 'second'].map((name) => (
+      <section
+        data-workspace={name}
+        data-static-demo={staticDemo ? 'true' : undefined}
+        data-service={`${base}api/`}
+      >
+        <h2>{name === 'first' ? 'First workspace' : 'Second workspace'}</h2>
+        <div data-hypermedia>
+          <label>
+            Selection
+            <select data-bind="selected">
+              <option value="alpha">Alpha</option>
+              <option value="beta">Beta</option>
+            </select>
+          </label>
+          <button type="button" data-on:click="selectBeta">
+            Select beta
+          </button>
+          <button type="button" data-on:click="increment">
+            Count click
+          </button>
+          <p>
+            Selected:{' '}
+            <strong data-selected data-text="selected">
+              alpha
+            </strong>{' '}
+            · Clicks:{' '}
+            <span data-clicks data-text="clicks">
+              0
+            </span>
+          </p>
+          <p>
+            Summary:{' '}
+            <span data-summary data-text="summary">
+              Preparing…
+            </span>
+          </p>
+          <div id={`fragment-${name}`}>
+            <label>
+              Panel note
+              <input id={`note-${name}`} data-bind="note" value="" />
+            </label>
+            <p data-fragment-message>
+              {staticDemo ? 'Your note stays in this panel.' : 'Waiting for server fragment'}
+            </p>
+          </div>
+        </div>
+        <div data-solid id={`solid-${name}`}>
+          <p>Loading interactive controls…</p>
+        </div>
+      </section>
+    ))}
   </div>
 </Layout>
 <script>
   import * as initial from '../../.client/workspace.js';
   let active = initial;
-  const start = () => { void active.initialize(); };
+  const start = () => {
+    void active.initialize();
+  };
   const stop = () => active.dispose();
   start();
   document.addEventListener('astro:page-load', start);
   document.addEventListener('astro:before-swap', stop);
   if (import.meta.hot) {
-    import.meta.hot.accept('../../.client/workspace.js', next => {
+    import.meta.hot.accept('../../.client/workspace.js', (next) => {
       if (!next) return;
-      stop(); active = next; start();
+      stop();
+      active = next;
+      start();
     });
     import.meta.hot.dispose(() => {
       stop();

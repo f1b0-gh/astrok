@@ -8,7 +8,9 @@ export default defineConfig({
   outputDir: './test-results-pages',
   use: {
     baseURL: 'http://127.0.0.1:4342',
-    ...(process.env.CHROME_PATH ? { launchOptions: { executablePath: process.env.CHROME_PATH } } : {}),
+    ...(process.env.CHROME_PATH
+      ? { launchOptions: { executablePath: process.env.CHROME_PATH } }
+      : {}),
     trace: 'retain-on-failure',
   },
   projects: [
@@ -16,7 +18,8 @@ export default defineConfig({
     { name: 'mobile', use: { ...devices['Pixel 7'] } },
   ],
   webServer: {
-    command: 'npm exec --workspace @astrokjs/example-workspace -- astro preview --host 127.0.0.1 --port 4342 --ignore-lock',
+    command:
+      'npm exec --workspace @astrokjs/example-workspace -- astro preview --host 127.0.0.1 --port 4342 --ignore-lock',
     url: `http://127.0.0.1:4342${base}`,
     reuseExistingServer: false,
   },

@@ -1,4 +1,4 @@
-/** Generation ownership adapted from ecspect/site/analytics/src/selection.mjs. */
+/** Latest-request ownership cancels superseded work and rejects stale responses. */
 import { getOwner, onCleanup } from 'solid-js';
 
 export type RequestState<T> =

@@ -13,10 +13,20 @@ export function solidIntegration(): AstroIntegration {
           serverEntrypoint: '@astrokjs/astro/solid/server',
           clientEntrypoint: '@astrokjs/astro/solid/client',
         });
-        updateConfig({ vite: {
-          plugins: [solid({ compiler: 'native', ssr: true, diagnostics: false, performanceTracks: false }), solidMarker()],
-          resolve: { dedupe: ['solid-js', '@solidjs/web', '@solidjs/signals'] },
-        } });
+        updateConfig({
+          vite: {
+            plugins: [
+              solid({
+                compiler: 'native',
+                ssr: true,
+                diagnostics: false,
+                performanceTracks: false,
+              }),
+              solidMarker(),
+            ],
+            resolve: { dedupe: ['solid-js', '@solidjs/web', '@solidjs/signals'] },
+          },
+        });
       },
     },
   };

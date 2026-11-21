@@ -14,27 +14,51 @@ export interface ResolvedLink {
   warning?: string;
 }
 export interface Document {
-  id: string; path: string; kind: 'index' | 'log' | 'concept'; title: string;
-  description: string; type: string | null; metadata: Record<string, unknown>;
-  body: string; source: string; headings: string[];
+  id: string;
+  path: string;
+  kind: 'index' | 'log' | 'concept';
+  title: string;
+  description: string;
+  type: string | null;
+  metadata: Record<string, unknown>;
+  body: string;
+  source: string;
+  headings: string[];
   links: (SourceLink & Partial<ResolvedLink> & { sourcePath?: string })[];
 }
 export interface Bundle {
-  documents: Document[]; assets: Map<string, Uint8Array>; errors: string[]; warnings: string[];
+  documents: Document[];
+  assets: Map<string, Uint8Array>;
+  errors: string[];
+  warnings: string[];
 }
-export interface SiteDocument extends Document { url: string; sourceUrl: string }
+export interface SiteDocument extends Document {
+  url: string;
+  sourceUrl: string;
+}
 export interface SiteOptions {
   root?: string;
   base?: string;
   /** Reject link diagnostics before publication; defaults to false in low-level helpers. */
   strictLinks?: boolean;
 }
-export interface GenerateOptions extends SiteOptions { docsDir?: string; publicDir?: string; presentation?: 'plain' | 'starlight' }
+export interface GenerateOptions extends SiteOptions {
+  docsDir?: string;
+  publicDir?: string;
+  presentation?: 'plain' | 'starlight';
+}
 export interface ManifestDocument extends Omit<SiteDocument, 'body' | 'source'> {}
-export interface SiteManifest { format: 'okf-site-manifest'; version: 1; documents: ManifestDocument[] }
+export interface SiteManifest {
+  format: 'okf-site-manifest';
+  version: 1;
+  documents: ManifestDocument[];
+}
 export interface LoadedSite {
-  bundle: Bundle; documents: SiteDocument[]; manifest: SiteManifest;
-  pages: Map<string, string>; raw: Map<string, string | Uint8Array>;
+  bundle: Bundle;
+  documents: SiteDocument[];
+  manifest: SiteManifest;
+  pages: Map<string, string>;
+  raw: Map<string, string | Uint8Array>;
 }
 
 /** Advisory OKF 0.3 interpretation; raw metadata stays on Document.metadata. */

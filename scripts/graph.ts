@@ -31,30 +31,80 @@ Options:
 Queries and builds require no SQL engine by default. Use --sqlite or OKF_SQLITE=1 to opt in.
 `;
 try {
-  const names = ['root', 'json', 'db', 'public-dir', 'output', 'direction', 'family', 'relation', 'context', 'origin', 'limit', 'depth', 'max-nodes', 'max-edges'];
-  const { values, positionals } = parseArgs({ options: { ...Object.fromEntries(names.map(name => [name, { type: 'string' as const }])), sqlite: { type: 'boolean' }, 'no-sqlite': { type: 'boolean' }, help: { type: 'boolean' } }, allowPositionals: true, strict: true });
+  const names = [
+    'root',
+    'json',
+    'db',
+    'public-dir',
+    'output',
+    'direction',
+    'family',
+    'relation',
+    'context',
+    'origin',
+    'limit',
+    'depth',
+    'max-nodes',
+    'max-edges',
+  ];
+  const { values, positionals } = parseArgs({
+    options: {
+      ...Object.fromEntries(names.map((name) => [name, { type: 'string' as const }])),
+      sqlite: { type: 'boolean' },
+      'no-sqlite': { type: 'boolean' },
+      help: { type: 'boolean' },
+    },
+    allowPositionals: true,
+    strict: true,
+  });
   if (values.help || !positionals.length) console.log(usage);
   else {
     const [command, ...args] = positionals;
-    const expected: Record<string, number> = { build: 0, info: 0, get: 1, search: 1, neighbors: 1, traverse: 1, path: 2, export: 0 };
+    const expected: Record<string, number> = {
+      build: 0,
+      info: 0,
+      get: 1,
+      search: 1,
+      neighbors: 1,
+      traverse: 1,
+      path: 2,
+      export: 0,
+    };
     if (!Object.hasOwn(expected, command!)) throw new Error(`Unknown command ${command}`);
     if (command === 'search' && args.length > 1) args.splice(0, args.length, args.join(' '));
-    if (args.length !== expected[command!]) throw new Error(`${command} expects ${expected[command!]} argument(s)`);
+    if (args.length !== expected[command!])
+      throw new Error(`${command} expects ${expected[command!]} argument(s)`);
     const flags = values as Record<string, string | boolean | undefined>;
-    const string = (key: string): string | undefined => typeof flags[key] === 'string' ? flags[key] : undefined;
-    const integer = (key: string) => { const value = string(key); if (value === undefined) return undefined; if (!/^\d+$/.test(value)) throw new Error(`${key} must be an integer`); return Number(value); };
+    const string = (key: string): string | undefined =>
+      typeof flags[key] === 'string' ? flags[key] : undefined;
+    const integer = (key: string) => {
+      const value = string(key);
+      if (value === undefined) return undefined;
+      if (!/^\d+$/.test(value)) throw new Error(`${key} must be an integer`);
+      return Number(value);
+    };
     if (values.sqlite && values['no-sqlite']) throw new Error('Choose --sqlite or --no-sqlite');
     const root = string('root') ?? 'knowledge';
-    const database = string('db'), jsonFile = string('json');
+    const database = string('db'),
+      jsonFile = string('json');
     if (database && jsonFile) throw new Error('Choose --db or --json');
-    if (command !== 'build' && (values.sqlite || values['no-sqlite'] || string('public-dir'))) throw new Error('--sqlite/--public-dir are build-only options');
-    if (command === 'build' && jsonFile) throw new Error('--json selects input for queries, not build');
-    if (database && (values.sqlite || values['no-sqlite'] || string('public-dir'))) throw new Error('--db selects a single database; omit it for publication');
-    if (string('root') && (jsonFile || database && command !== 'build')) throw new Error('--root cannot be combined with snapshot queries');
-    if (string('output') && command !== 'export') throw new Error('--output is only supported by export');
+    if (command !== 'build' && (values.sqlite || values['no-sqlite'] || string('public-dir')))
+      throw new Error('--sqlite/--public-dir are build-only options');
+    if (command === 'build' && jsonFile)
+      throw new Error('--json selects input for queries, not build');
+    if (database && (values.sqlite || values['no-sqlite'] || string('public-dir')))
+      throw new Error('--db selects a single database; omit it for publication');
+    if (string('root') && (jsonFile || (database && command !== 'build')))
+      throw new Error('--root cannot be combined with snapshot queries');
+    if (string('output') && command !== 'export')
+      throw new Error('--output is only supported by export');
     let index: KnowledgeGraph | SqliteKnowledgeIndex;
     if (command === 'build' && !database) {
-      const result = await publishIndex({ root, publicDir: string('public-dir'), sqlite: values.sqlite === true || !values['no-sqlite'] && process.env.OKF_SQLITE === '1' });
+      const result = await publishIndex({
+        root,
+        publicDir: string('public-dir'),
+        sqlite: values.sqlite === true || (!values['no-sqlite'] && process.env.OKF_SQLITE === '1'),
+      });
       index = KnowledgeGraph.fromJSON(result.graph);
     } else if (database) {
       if (command === 'build') {
@@ -63,34 +113,74 @@ try {
       }
       const { SqliteKnowledgeIndex } = await import('@astrokjs/okf/sqlite');
       index = await SqliteKnowledgeIndex.open(database);
-    } else if (jsonFile) index = KnowledgeGraph.fromJSON(JSON.parse(await readFile(jsonFile, 'utf8')));
+    } else if (jsonFile)
+      index = KnowledgeGraph.fromJSON(JSON.parse(await readFile(jsonFile, 'utf8')));
     else index = await KnowledgeGraph.open(root);
     try {
-      const filters: Filters = { direction: string('direction') as Filters['direction'], family: string('family') as Filters['family'], relation: string('relation'), context: string('context'), origin: string('origin') as Filters['origin'] };
-      const walk = { ...filters, maxDepth: integer('depth'), maxNodes: integer('max-nodes'), maxEdges: integer('max-edges') };
+      const filters: Filters = {
+        direction: string('direction') as Filters['direction'],
+        family: string('family') as Filters['family'],
+        relation: string('relation'),
+        context: string('context'),
+        origin: string('origin') as Filters['origin'],
+      };
+      const walk = {
+        ...filters,
+        maxDepth: integer('depth'),
+        maxNodes: integer('max-nodes'),
+        maxEdges: integer('max-edges'),
+      };
       let result: unknown;
       switch (command) {
-        case 'build': case 'info': {
+        case 'build':
+        case 'info': {
           const exported = index.export();
-          result = { source: database ?? jsonFile ?? root, runtime: index.runtime, metadata: exported.metadata, counts: { nodes: exported.nodes.length, edges: exported.edges.length, sources: exported.sources.length }, diagnostics: exported.diagnostics, integrity: index.integrity() };
+          result = {
+            source: database ?? jsonFile ?? root,
+            runtime: index.runtime,
+            metadata: exported.metadata,
+            counts: {
+              nodes: exported.nodes.length,
+              edges: exported.edges.length,
+              sources: exported.sources.length,
+            },
+            diagnostics: exported.diagnostics,
+            integrity: index.integrity(),
+          };
           break;
         }
-        case 'get': result = index.getNode(args[0]!); if (!result) throw new Error(`Unknown node: ${args[0]}`); break;
-        case 'search': result = index.search(args[0]!, { limit: integer('limit') }); break;
-        case 'neighbors': result = index.neighbors(args[0]!, { ...filters, limit: integer('limit') }); break;
-        case 'traverse': result = index.traverse(args[0]!, walk); break;
-        case 'path': result = index.path(args[0]!, args[1]!, walk); break;
-        case 'export': result = index.export(); break;
+        case 'get':
+          result = index.getNode(args[0]!);
+          if (!result) throw new Error(`Unknown node: ${args[0]}`);
+          break;
+        case 'search':
+          result = index.search(args[0]!, { limit: integer('limit') });
+          break;
+        case 'neighbors':
+          result = index.neighbors(args[0]!, { ...filters, limit: integer('limit') });
+          break;
+        case 'traverse':
+          result = index.traverse(args[0]!, walk);
+          break;
+        case 'path':
+          result = index.path(args[0]!, args[1]!, walk);
+          break;
+        case 'export':
+          result = index.export();
+          break;
       }
       const json = JSON.stringify(result, null, 2) + '\n';
       const output = string('output');
       if (output) {
         const input = database ?? jsonFile;
-        if (input && await physicalPath(output) === await physicalPath(input)) throw new Error('JSON output cannot overwrite the input snapshot');
+        if (input && (await physicalPath(output)) === (await physicalPath(input)))
+          throw new Error('JSON output cannot overwrite the input snapshot');
         await assertOutside(root, output);
         await atomicWrite(output, json);
       } else process.stdout.write(json);
-    } finally { index.close(); }
+    } finally {
+      index.close();
+    }
   }
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);

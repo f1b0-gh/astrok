@@ -8,8 +8,8 @@ graph_kind: thing
 
 # Token store
 
-The fictional [SDK client](sdk-client.md) contains this component. In the graph,
-you can follow `contains` from client to store, or `part_of` from store to client.
-Both directions come from the one relationship recorded on the client page.
+The fictional [SDK client](sdk-client.md) contains this component. In the graph, you can follow
+`contains` from client to store, or `part_of` from store to client. Both directions come from the
+one relationship recorded on the client page.
 
 This page models a component; it provides no token-storage implementation.

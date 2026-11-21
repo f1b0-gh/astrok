@@ -3,10 +3,17 @@ import type { Component } from 'solid-js';
 import { hydrate, render } from '@solidjs/web';
 
 type Props = Record<string, unknown>;
-interface Mounted { update: (props: Props) => void; dispose: () => void }
+interface Mounted {
+  update: (props: Props) => void;
+  dispose: () => void;
+}
 const mounted = new WeakMap<HTMLElement, Mounted>();
 
-function slotProps(element: HTMLElement, slots: Record<string, string>, hydratable: boolean): Props {
+function slotProps(
+  element: HTMLElement,
+  slots: Record<string, string>,
+  hydratable: boolean,
+): Props {
   const existing = new Map<string, HTMLElement>();
   if (hydratable) {
     const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT, {
@@ -33,28 +40,43 @@ function slotProps(element: HTMLElement, slots: Record<string, string>, hydratab
   return props;
 }
 
-export default (element: HTMLElement) => (component: Component<Props>, props: Props,
-  slots: Record<string, string>, options: { client: string }): void => {
-  const previous = mounted.get(element);
-  if (!previous && !element.hasAttribute('ssr')) return;
-  const hydratable = options.client !== 'only';
-  const values = { ...props, ...slotProps(element, slots, hydratable) };
-  if (previous) { previous.update(values); return; }
-  const [state, setState] = createStore<Props>(values);
-  const view = () => createComponent(component, state);
-  if (!hydratable) element.replaceChildren();
-  const dispose = hydratable
-    ? hydrate(view, element, { renderId: element.dataset.astrokSolidId ?? '' })
-    : render(view, element);
-  const instance: Mounted = {
-    dispose,
-    update(next) { setState(draft => {
-      for (const key of Object.keys(draft)) if (!Object.hasOwn(next, key)) delete draft[key];
-      Object.assign(draft, next);
-    }); },
+export default (element: HTMLElement) =>
+  (
+    component: Component<Props>,
+    props: Props,
+    slots: Record<string, string>,
+    options: { client: string },
+  ): void => {
+    const previous = mounted.get(element);
+    if (!previous && !element.hasAttribute('ssr')) return;
+    const hydratable = options.client !== 'only';
+    const values = { ...props, ...slotProps(element, slots, hydratable) };
+    if (previous) {
+      previous.update(values);
+      return;
+    }
+    const [state, setState] = createStore<Props>(values);
+    const view = () => createComponent(component, state);
+    if (!hydratable) element.replaceChildren();
+    const dispose = hydratable
+      ? hydrate(view, element, { renderId: element.dataset.astrokSolidId ?? '' })
+      : render(view, element);
+    const instance: Mounted = {
+      dispose,
+      update(next) {
+        setState((draft) => {
+          for (const key of Object.keys(draft)) if (!Object.hasOwn(next, key)) delete draft[key];
+          Object.assign(draft, next);
+        });
+      },
+    };
+    mounted.set(element, instance);
+    element.addEventListener(
+      'astro:unmount',
+      () => {
+        instance.dispose();
+        mounted.delete(element);
+      },
+      { once: true },
+    );
   };
-  mounted.set(element, instance);
-  element.addEventListener('astro:unmount', () => {
-    instance.dispose(); mounted.delete(element);
-  }, { once: true });
-};

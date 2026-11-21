@@ -2,20 +2,34 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
 
-test('renders canonical documents, working links and code without YAML metadata', async ({ page }) => {
+test('renders canonical documents, working links and code without YAML metadata', async ({
+  page,
+}) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Astrok documentation');
-  await page.locator('.sl-markdown-content').getByRole('link', { name: 'Getting started', exact: true }).click();
+  await page
+    .locator('.sl-markdown-content')
+    .getByRole('link', { name: 'Getting started', exact: true })
+    .click();
   await expect(page).toHaveURL(/\/getting-started\/$/);
   await expect(page.locator('pre').first()).toContainText('npm ci');
   await page.goto('/');
-  await page.locator('.sl-markdown-content').getByRole('link', { name: 'Write a page', exact: true }).click();
+  await page
+    .locator('.sl-markdown-content')
+    .getByRole('link', { name: 'Write a page', exact: true })
+    .click();
   await expect(page).toHaveURL(/\/writing-content\/$/);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Write a page');
   const body = page.locator('.sl-markdown-content');
   await expect(body).not.toContainText('description: Add a canonical');
-  await expect(page.getByRole('link', { name: 'View Markdown' })).toHaveAttribute('href', '/okf/writing-content.md');
-  await expect(body.getByRole('link', { name: 'OKF specification', exact: true })).toHaveAttribute('href', 'https://okf.md/spec/');
+  await expect(page.getByRole('link', { name: 'View Markdown' })).toHaveAttribute(
+    'href',
+    '/okf/writing-content.md',
+  );
+  await expect(body.getByRole('link', { name: 'OKF specification', exact: true })).toHaveAttribute(
+    'href',
+    'https://okf.md/spec/',
+  );
   await page.goto('/solid-rendering/');
   await expect(page.locator('pre').first()).toContainText('client:load');
   await expect(page.locator('.sl-markdown-content')).not.toContainText('type: Guide');
@@ -31,7 +45,7 @@ test('code blocks remain keyboard-focusable on narrow screens', async ({ page, r
   await page.goto('/writing-content/');
   const code = page.locator('.sl-markdown-content pre').first();
   await expect(code).toHaveAttribute('tabindex', '0');
-  await code.evaluate(element => element.focus());
+  await code.evaluate((element) => element.focus());
   await expect(code).toBeFocused();
   await page.keyboard.press('ArrowRight');
   await expect(code).toBeFocused();
@@ -39,14 +53,19 @@ test('code blocks remain keyboard-focusable on narrow screens', async ({ page, r
 
 test('publishes exact raw Markdown and manifest with source paths', async ({ request }) => {
   const manifest = await (await request.get('/okf/manifest.json')).json();
-  expect(manifest.documents.map(document => document.id).sort()).toEqual(['index', 'getting-started', 'writing-content', 'solid-rendering', 'using-with-ai'].sort());
+  expect(manifest.documents.map((document) => document.id).sort()).toEqual(
+    ['index', 'getting-started', 'writing-content', 'solid-rendering', 'using-with-ai'].sort(),
+  );
   for (const document of manifest.documents) {
     const response = await request.get(document.sourceUrl);
     expect(response.status()).toBe(200);
     expect(await response.text()).toBe(await readFile(`knowledge/${document.path}`, 'utf8'));
     expect((await request.get(document.url)).status()).toBe(200);
   }
-  expect(manifest.documents.find(d => d.id === 'using-with-ai').metadata.tags).toEqual(['agents', 'documentation']);
+  expect(manifest.documents.find((d) => d.id === 'using-with-ai').metadata.tags).toEqual([
+    'agents',
+    'documentation',
+  ]);
 });
 
 test('keyboard search finds source content and Escape closes the dialog', async ({ page }) => {
@@ -56,7 +75,9 @@ test('keyboard search finds source content and Escape closes the dialog', async 
   await expect(page.getByRole('dialog')).toBeVisible();
   const input = page.locator('.pagefind-ui__search-input');
   await input.fill('slots');
-  await expect(page.locator('.pagefind-ui__result-link').first()).toContainText('Render Solid components');
+  await expect(page.locator('.pagefind-ui__result-link').first()).toContainText(
+    'Render Solid components',
+  );
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).not.toBeVisible();
 });
@@ -68,10 +89,15 @@ test('navigation is accessible on desktop and mobile', async ({ page, isMobile }
   if (isMobile) {
     await page.getByRole('button', { name: 'Menu' }).click();
     await expect(page.locator('#starlight__sidebar')).toBeVisible();
-    await page.locator('#starlight__sidebar').getByRole('link', { name: 'Write a page', exact: true }).click();
+    await page
+      .locator('#starlight__sidebar')
+      .getByRole('link', { name: 'Write a page', exact: true })
+      .click();
     await expect(page).toHaveURL(/\/writing-content\/$/);
   }
-  const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+    .analyze();
   expect(results.violations).toEqual([]);
 });
 
@@ -86,25 +112,32 @@ test('published OKF graph supports SQL-free queries and source navigation', asyn
   expect(index.export().metadata.graph_model).toBe('gamma34/0.1');
   expect((await request.get('/graph/knowledge.sqlite')).status()).toBe(404);
   const linked = index.neighbors('getting-started', { family: 'reference' });
-  expect(linked.items.some(item => item.node.id === 'writing-content')).toBe(true);
+  expect(linked.items.some((item) => item.node.id === 'writing-content')).toBe(true);
   for (const item of linked.items) {
-    for (const evidence of item.evidence) expect((await request.get(evidence.sourceUrl)).status()).toBe(200);
+    for (const evidence of item.evidence)
+      expect((await request.get(evidence.sourceUrl)).status()).toBe(200);
   }
   const guide = await (await request.get('/llms.txt')).text();
   expect(guide).toContain('/okf/index.md');
   expect(guide).toContain('OKF 0.3');
   expect(guide).toContain('gamma34/0.1');
   expect(guide).not.toContain('The SDK authenticates API requests with a bearer token.');
-  const links = [...guide.matchAll(/\[[^\]]+\]\((\/[^)]+)\)/g)].map(match => match[1]);
+  const links = [...guide.matchAll(/\[[^\]]+\]\((\/[^)]+)\)/g)].map((match) => match[1]);
   expect(links).toContain('/graph/query-guide.md');
   for (const url of links) expect((await request.get(url)).status(), url).toBe(200);
   const reference = await (await request.get('/graph/query-guide.md')).text();
   expect(reference).toContain('KnowledgeGraph.fromJSON');
 });
 
-test('AI guide is discoverable and presents a copyable prompt without exposing frontmatter', async ({ page, request }) => {
+test('AI guide is discoverable and presents a copyable prompt without exposing frontmatter', async ({
+  page,
+  request,
+}) => {
   await page.goto('/');
-  await page.locator('.sl-markdown-content').getByRole('link', { name: 'Using these docs with AI', exact: true }).click();
+  await page
+    .locator('.sl-markdown-content')
+    .getByRole('link', { name: 'Using these docs with AI', exact: true })
+    .click();
   await expect(page).toHaveURL(/\/using-with-ai\/$/);
   const body = page.locator('.sl-markdown-content');
   await expect(body).toContainText('web access');
@@ -117,24 +150,35 @@ test('AI guide is discoverable and presents a copyable prompt without exposing f
 
 for (const theme of ['dark', 'light']) {
   test(`shared astrok template is accessible in Starlight ${theme}`, async ({ page }, testInfo) => {
-    await page.addInitScript(value => localStorage.setItem('starlight-theme', value), theme);
+    await page.addInitScript((value) => localStorage.setItem('starlight-theme', value), theme);
     await page.goto('/getting-started/');
     await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
     await expect(page.locator('.site-title')).toContainText('astrok');
     await page.evaluate(() => document.fonts.ready);
     const template = await page.evaluate(() => {
       const root = getComputedStyle(document.documentElement);
-      const logos = [...document.querySelectorAll('.site-title img')].filter(img => getComputedStyle(img).display !== 'none');
-      return { ground: root.getPropertyValue('--ground').trim().toUpperCase(), font: getComputedStyle(document.querySelector('h1')).fontFamily,
-        overflow: document.documentElement.scrollWidth > innerWidth, logosLoaded: logos.length > 0 && logos.every(img => img.complete && img.naturalWidth > 0) };
+      const logos = [...document.querySelectorAll('.site-title img')].filter(
+        (img) => getComputedStyle(img).display !== 'none',
+      );
+      return {
+        ground: root.getPropertyValue('--ground').trim().toUpperCase(),
+        font: getComputedStyle(document.querySelector('h1')).fontFamily,
+        overflow: document.documentElement.scrollWidth > innerWidth,
+        logosLoaded: logos.length > 0 && logos.every((img) => img.complete && img.naturalWidth > 0),
+      };
     });
     expect(template.ground).toBe(theme === 'dark' ? '#0E1020' : '#F7F6F1');
     expect(template.font).toContain('Sora');
     expect(template.overflow).toBe(false);
     expect(template.logosLoaded).toBe(true);
-    const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+    const result = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+      .analyze();
     expect(result.violations).toEqual([]);
-    await page.evaluate(() => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); window.scrollTo(0, 0); });
+    await page.evaluate(() => {
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+      window.scrollTo(0, 0);
+    });
     await page.screenshot({ path: testInfo.outputPath(`starlight-${theme}.png`), fullPage: true });
   });
 }

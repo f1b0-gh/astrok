@@ -522,3 +522,335 @@ test('field-backed input edits leave large independent data untouched', async ({
     errors: ['Note too long', 'Invalid amount'],
   });
 });
+
+test('partially failed patches restore surviving bindings and activate inserted bindings', async ({
+  page,
+}) => {
+  const result = await page.evaluate(async () => {
+    const { createHypermedia, createSharedState, flush } = await import('/__hypermedia_test__.js');
+    const shared = createSharedState({ count: 2 }, (value) => value);
+    const first = document.createElement('section');
+    first.innerHTML =
+      '<div id="partial-first" data-partial data-attr:title="count"><span data-text="count"></span><button data-on:click="increment">Old</button></div>';
+    const last = document.createElement('section');
+    last.id = 'partial-last';
+    last.setAttribute('data-partial', '');
+    document.body.append(first, last);
+    const html = createHypermedia(shared, {
+      allowedPaths: [],
+      handlers: {
+        count: { run: (state) => state.count },
+        increment: {
+          run: (state) => {
+            state.count++;
+          },
+        },
+      },
+    });
+    try {
+      html.mount(first);
+      html.mount(last);
+      flush();
+      const oldButton = first.querySelector('button');
+      let error;
+      try {
+        html.applyElements({
+          selector: '[data-partial]',
+          elements:
+            '<div id="partial-first" data-partial data-attr:title="count" title="server"><span data-text="count">server</span><a data-on:click="increment">New</a></div>',
+        });
+      } catch (caught) {
+        error = caught.message;
+      }
+      flush();
+      const restored = [first.firstElementChild.title, first.querySelector('span').textContent];
+      oldButton.click();
+      flush();
+      const detached = shared.state.count;
+      first.querySelector('a').click();
+      flush();
+      return {
+        error,
+        restored,
+        detached,
+        inserted: shared.state.count,
+        final: first.querySelector('span').textContent,
+      };
+    } finally {
+      html.dispose();
+      shared.dispose();
+      first.remove();
+      last.remove();
+    }
+  });
+  expect(result).toEqual({
+    error: 'Region morph must preserve its tag and id',
+    restored: ['2', '2'],
+    detached: 2,
+    inserted: 3,
+    final: '3',
+  });
+});
+
+test('patches refresh touched bindings without invoking unrelated handlers', async ({ page }) => {
+  const result = await page.evaluate(async () => {
+    const { createHypermedia, createSharedState, flush } = await import('/__hypermedia_test__.js');
+    const shared = createSharedState({ count: 2 }, (value) => value);
+    const first = document.createElement('section');
+    first.innerHTML =
+      '<span id="refresh-target" data-text="target" data-effect="targetEffect"></span><span data-text="sibling" data-effect="siblingEffect"></span>';
+    const other = document.createElement('section');
+    other.innerHTML = '<span data-text="other" data-effect="otherEffect"></span>';
+    document.body.append(first, other);
+    const runs = {
+      target: 0,
+      targetEffect: 0,
+      sibling: 0,
+      siblingEffect: 0,
+      other: 0,
+      otherEffect: 0,
+    };
+    const handlers = Object.fromEntries(
+      Object.keys(runs).map((name) => [
+        name,
+        {
+          ...(name.endsWith('Effect') ? { watch: ['count'] } : {}),
+          run: (state) => {
+            runs[name]++;
+            return state.count;
+          },
+        },
+      ]),
+    );
+    const html = createHypermedia(shared, { allowedPaths: [], handlers });
+    try {
+      html.mount(first);
+      html.mount(other);
+      flush();
+      html.applyElements({
+        selector: '#refresh-target',
+        elements:
+          '<span id="refresh-target" data-text="target" data-effect="targetEffect">server</span>',
+      });
+      flush();
+      for (const mode of ['before', 'after']) {
+        html.applyElements({ selector: '#refresh-target', mode, elements: '<b>neighbor</b>' });
+        flush();
+      }
+      const patched = { ...runs };
+      const restored = first.querySelector('#refresh-target').textContent;
+      shared.update((state) => {
+        state.count++;
+      });
+      flush();
+      return {
+        patched,
+        restored,
+        changed: { ...runs },
+        values: [
+          first.querySelector('#refresh-target').textContent,
+          first.lastElementChild.textContent,
+          other.firstElementChild.textContent,
+        ],
+      };
+    } finally {
+      html.dispose();
+      shared.dispose();
+      first.remove();
+      other.remove();
+    }
+  });
+  expect(result).toEqual({
+    patched: { target: 2, targetEffect: 2, sibling: 1, siblingEffect: 1, other: 1, otherEffect: 1 },
+    restored: '2',
+    changed: { target: 3, targetEffect: 3, sibling: 2, siblingEffect: 2, other: 2, otherEffect: 2 },
+    values: ['3', '3', '3'],
+  });
+});
+
+test('insertion and removal restore ancestor text without refreshing ancestor effects', async ({
+  page,
+}) => {
+  const result = await page.evaluate(async () => {
+    const { createHypermedia, createSharedState, flush } = await import('/__hypermedia_test__.js');
+    const shared = createSharedState({}, (value) => value);
+    const root = document.createElement('section');
+    root.innerHTML = '<div id="text-parent" data-text="text" data-effect="effect"></div>';
+    document.body.append(root);
+    let effects = 0;
+    const html = createHypermedia(shared, {
+      allowedPaths: [],
+      handlers: {
+        text: { run: () => 'bound' },
+        effect: {
+          watch: [],
+          run: () => {
+            effects++;
+          },
+        },
+      },
+    });
+    try {
+      html.mount(root);
+      flush();
+      const parent = root.firstElementChild;
+      const values = [];
+      for (const mode of ['append', 'prepend', 'before', 'after', 'replace', 'remove']) {
+        const target = document.createElement('span');
+        target.id = 'text-child';
+        parent.replaceChildren(target);
+        html.applyElements({
+          selector: ['append', 'prepend'].includes(mode) ? '#text-parent' : '#text-child',
+          mode,
+          elements: '<b>server</b>',
+        });
+        flush();
+        values.push(parent.textContent);
+      }
+      return { values, effects };
+    } finally {
+      html.dispose();
+      shared.dispose();
+      root.remove();
+    }
+  });
+  expect(result).toEqual({
+    values: ['bound', 'bound', 'bound', 'bound', 'bound', 'bound'],
+    effects: 1,
+  });
+});
+
+test('morph refresh skips ignored subtrees and initializes new bindings once', async ({ page }) => {
+  const result = await page.evaluate(async () => {
+    const { createHypermedia, createSharedState, flush } = await import('/__hypermedia_test__.js');
+    const shared = createSharedState({}, (value) => value);
+    const root = document.createElement('section');
+    root.id = 'refresh-region';
+    root.innerHTML = '<div data-ignore-morph data-text="ignored"></div>';
+    document.body.append(root);
+    let ignored = 0;
+    let added = 0;
+    const html = createHypermedia(shared, {
+      allowedPaths: [],
+      handlers: {
+        ignored: {
+          run: () => {
+            ignored++;
+            return 'preserved';
+          },
+        },
+        added: {
+          run: () => {
+            added++;
+            return 'added';
+          },
+        },
+      },
+    });
+    try {
+      html.mount(root);
+      flush();
+      html.applyElements({
+        selector: '#refresh-region',
+        mode: 'inner',
+        elements:
+          '<div data-ignore-morph data-text="ignored">server</div><span data-text="added"></span>',
+      });
+      flush();
+      html.applyElements({
+        selector: '#refresh-region > div',
+        elements: '<div data-ignore-morph data-text="ignored">server</div>',
+      });
+      flush();
+      return { ignored, added, text: root.textContent };
+    } finally {
+      html.dispose();
+      shared.dispose();
+      root.remove();
+    }
+  });
+  expect(result).toEqual({ ignored: 1, added: 1, text: 'preservedadded' });
+});
+
+test('mounting a detached region initializes bindings before insertion', async ({ page }) => {
+  const result = await page.evaluate(async () => {
+    const { createHypermedia, createSharedState, flush } = await import('/__hypermedia_test__.js');
+    const shared = createSharedState({ count: 2 }, (value) => value);
+    const root = document.createElement('section');
+    root.innerHTML =
+      '<span data-text="count"></span><button data-on:click="increment">Add</button>';
+    const html = createHypermedia(shared, {
+      allowedPaths: [],
+      handlers: {
+        count: { run: (state) => state.count },
+        increment: {
+          run: (state) => {
+            state.count++;
+          },
+        },
+      },
+    });
+    try {
+      html.mount(root);
+      flush();
+      const detached = root.firstElementChild.textContent;
+      document.body.append(root);
+      root.querySelector('button').click();
+      flush();
+      return { detached, inserted: root.firstElementChild.textContent, count: shared.state.count };
+    } finally {
+      html.dispose();
+      shared.dispose();
+      root.remove();
+    }
+  });
+  expect(result).toEqual({ detached: '2', inserted: '3', count: 3 });
+});
+
+test('option patches restore ancestor select bindings without rerunning effects', async ({
+  page,
+}) => {
+  const result = await page.evaluate(async () => {
+    const { createHypermedia, createSharedState, flush } = await import('/__hypermedia_test__.js');
+    const shared = createSharedState({ choice: 'a' }, (value) => value);
+    const root = document.createElement('section');
+    root.innerHTML =
+      '<select id="bound-choice" data-bind="choice" data-effect="effect"><option value="a">A</option></select>';
+    document.body.append(root);
+    let effects = 0;
+    const html = createHypermedia(shared, {
+      allowedPaths: [],
+      handlers: {
+        effect: {
+          watch: [],
+          run: () => {
+            effects++;
+          },
+        },
+      },
+    });
+    try {
+      html.mount(root);
+      flush();
+      const select = root.firstElementChild;
+      html.applyElements({
+        selector: '#bound-choice',
+        mode: 'append',
+        elements: '<option id="added-choice" value="b" selected>B</option>',
+      });
+      flush();
+      const appended = select.value;
+      html.applyElements({
+        selector: '#added-choice',
+        elements: '<option id="added-choice" value="c" selected>C</option>',
+      });
+      flush();
+      return { appended, morphed: select.value, choice: shared.state.choice, effects };
+    } finally {
+      html.dispose();
+      shared.dispose();
+      root.remove();
+    }
+  });
+  expect(result).toEqual({ appended: 'a', morphed: 'a', choice: 'a', effects: 1 });
+});

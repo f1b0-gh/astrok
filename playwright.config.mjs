@@ -3,8 +3,11 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/browser',
   use: {
-    baseURL: 'http://127.0.0.1:4322', trace: 'retain-on-failure',
-    ...(process.env.CHROME_PATH ? { launchOptions: { executablePath: process.env.CHROME_PATH } } : {}),
+    baseURL: 'http://127.0.0.1:4322',
+    trace: 'retain-on-failure',
+    ...(process.env.CHROME_PATH
+      ? { launchOptions: { executablePath: process.env.CHROME_PATH } }
+      : {}),
   },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },

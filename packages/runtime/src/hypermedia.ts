@@ -1,4 +1,4 @@
-/** Adapted from soc-proto/apps/web/src/hypermedia.ts. Bindings use registered application callbacks. */
+/** Hypermedia bindings use registered application callbacks. */
 import {
   createEffect,
   createMemo,
@@ -86,11 +86,13 @@ export function createHypermedia<T extends Record<string, unknown>>(
     if (disposed) throw new Error('Hypermedia is disposed');
   };
   const regions = new Set<HTMLElement>();
-  const [revision, setRevision] = createSignal(0);
-  const bindings = new Map<
-    Element,
-    { signature: string; attributes: Map<string, string>; dispose: () => void }
-  >();
+  type Binding = {
+    signature: string;
+    attributes: Map<string, string>;
+    dispose: () => void;
+    refresh: (childrenOnly: boolean) => void;
+  };
+  const bindings = new Map<Element, Binding>();
   const requests = new Map<Element, AbortController>();
   const observers = new Map<Element, MutationObserver>();
   const supported = (name: string) =>
@@ -144,6 +146,8 @@ export function createHypermedia<T extends Record<string, unknown>>(
     }
     return runWithOwner(null, () =>
       createRoot((dispose) => {
+        const [revision, setRevision] = createSignal(0);
+        const [childrenRevision, setChildrenRevision] = createSignal(0);
         const cleanups: (() => void)[] = [];
         onCleanup(() => {
           requests.get(el)?.abort();
@@ -191,6 +195,7 @@ export function createHypermedia<T extends Record<string, unknown>>(
               createEffect(
                 () => {
                   revision();
+                  childrenRevision();
                   return readPath(shared.state, path);
                 },
                 (value) => {
@@ -222,6 +227,7 @@ export function createHypermedia<T extends Record<string, unknown>>(
               createEffect(
                 () => {
                   revision();
+                  if (kind === 'text') childrenRevision();
                   return handler.run(shared.state, actions(el), el);
                 },
                 (value) => {
@@ -244,7 +250,13 @@ export function createHypermedia<T extends Record<string, unknown>>(
           dispose();
           throw error;
         }
-        return dispose;
+        return {
+          dispose,
+          refresh: (childrenOnly: boolean) => {
+            if (childrenOnly) setChildrenRevision((n) => n + 1);
+            else setRevision((n) => n + 1);
+          },
+        };
       }),
     );
   }
@@ -254,7 +266,7 @@ export function createHypermedia<T extends Record<string, unknown>>(
         entry.dispose();
         bindings.delete(el);
       }
-    for (const root of regions)
+    for (const root of regions) {
       for (const el of [root, ...root.querySelectorAll('*')]) {
         if (el.closest('[data-ignore]') || protectedNode(el)) continue;
         const attrs = Array.from(el.attributes).filter((a) => supported(a.name));
@@ -267,9 +279,10 @@ export function createHypermedia<T extends Record<string, unknown>>(
           bindings.set(el, {
             signature,
             attributes: new Map(attrs.map((a) => [a.name, a.value])),
-            dispose: bind(el, attrs, previous?.attributes),
+            ...bind(el, attrs, previous?.attributes),
           });
       }
+    }
   }
   function mount(root: HTMLElement) {
     assertActive();
@@ -348,93 +361,127 @@ export function createHypermedia<T extends Record<string, unknown>>(
       nodes.some((node) => regions.has(node as HTMLElement) && !['inner', 'outer'].includes(mode))
     )
       throw new Error('Cannot remove or replace a region boundary');
-    for (const target of nodes) {
-      if (regions.has(target as HTMLElement) && !['inner', 'outer'].includes(mode))
-        throw new Error('Cannot remove or replace a region boundary');
-      const focused = document.activeElement;
-      const focusValue =
-        focused instanceof HTMLInputElement ||
-        focused instanceof HTMLTextAreaElement ||
-        focused instanceof HTMLSelectElement
-          ? focused.value
-          : undefined;
-      const selection =
-        focused instanceof HTMLInputElement || focused instanceof HTMLTextAreaElement
-          ? ([focused.selectionStart, focused.selectionEnd, focused.selectionDirection] as const)
-          : undefined;
-      const content = template.content.cloneNode(true) as DocumentFragment;
-      if (mode === 'remove') {
-        target.remove();
-        continue;
+    // Capture existing owners before mutation. Replaced/new bindings initialize in
+    // scan(); only surviving owners need their unchanged values reapplied.
+    const affected = new Map<Element, { entry: Binding; childrenOnly: boolean }>();
+    const capture = (target: Element | null, full: boolean) => {
+      if (!target) return;
+      const entry = bindings.get(target);
+      if (full && entry) affected.set(target, { entry, childrenOnly: false });
+      // Child mutations can overwrite text or change a selected option. Refresh
+      // those outputs without rerunning ancestor effects or attribute handlers.
+      for (let el: Element | null = target; el; el = el.parentElement) {
+        const ancestor = bindings.get(el);
+        if (
+          ancestor &&
+          !affected.has(el) &&
+          [...ancestor.attributes.keys()].some((name) => /^data-(text|bind)(:|__|$)/.test(name))
+        )
+          affected.set(el, { entry: ancestor, childrenOnly: true });
       }
-      if (mode === 'inner' || mode === 'outer') {
-        const incoming =
-          mode === 'inner'
-            ? (target.cloneNode(false) as Element)
-            : selector
-              ? content.firstElementChild
-              : content.querySelector('#' + CSS.escape(target.id));
-        if (!incoming) throw new Error('Outer morph requires an element');
-        if (mode === 'inner') incoming.append(content);
-        if (
-          regions.has(target as HTMLElement) &&
-          (incoming.tagName !== target.tagName || incoming.id !== target.id)
-        )
-          throw new Error('Region morph must preserve its tag and id');
-        morphdom(target, incoming, {
-          onBeforeNodeDiscarded: (node) => {
-            if (touchesProtected(node)) throw new Error('Cannot discard Solid-owned subtree');
-            return true;
-          },
-          onBeforeElUpdated: (oldEl, newEl) => {
-            if (oldEl.hasAttribute('data-ignore-morph')) return false;
-            if (
-              oldEl === document.activeElement &&
-              oldEl instanceof HTMLInputElement &&
-              newEl instanceof HTMLInputElement
-            ) {
-              newEl.value = oldEl.value;
-              newEl.checked = oldEl.checked;
-            }
-            if (
-              oldEl === document.activeElement &&
-              oldEl instanceof HTMLSelectElement &&
-              newEl instanceof HTMLSelectElement
-            )
-              newEl.value = oldEl.value;
-            if (
-              oldEl === document.activeElement &&
-              oldEl instanceof HTMLTextAreaElement &&
-              newEl instanceof HTMLTextAreaElement
-            )
-              newEl.value = oldEl.value;
-            return true;
-          },
-        });
-      } else if (mode === 'replace') target.replaceWith(content);
-      else if (mode === 'append') target.append(content);
-      else if (mode === 'prepend') target.prepend(content);
-      else if (mode === 'before') target.before(content);
-      else if (mode === 'after') target.after(content);
-      if (
-        focused?.isConnected &&
-        focusValue !== undefined &&
-        (focused instanceof HTMLInputElement ||
+    };
+    try {
+      for (const target of nodes) {
+        if (regions.has(target as HTMLElement) && !['inner', 'outer'].includes(mode))
+          throw new Error('Cannot remove or replace a region boundary');
+        const focused = document.activeElement;
+        const focusValue =
+          focused instanceof HTMLInputElement ||
           focused instanceof HTMLTextAreaElement ||
-          focused instanceof HTMLSelectElement)
-      ) {
-        focused.value = focusValue;
+          focused instanceof HTMLSelectElement
+            ? focused.value
+            : undefined;
+        const selection =
+          focused instanceof HTMLInputElement || focused instanceof HTMLTextAreaElement
+            ? ([focused.selectionStart, focused.selectionEnd, focused.selectionDirection] as const)
+            : undefined;
+        const content = template.content.cloneNode(true) as DocumentFragment;
+        if (mode === 'remove') {
+          capture(target.parentElement, false);
+          target.remove();
+          continue;
+        }
+        if (mode === 'inner' || mode === 'outer') {
+          const incoming =
+            mode === 'inner'
+              ? (target.cloneNode(false) as Element)
+              : selector
+                ? content.firstElementChild
+                : content.querySelector('#' + CSS.escape(target.id));
+          if (!incoming) throw new Error('Outer morph requires an element');
+          if (mode === 'inner') incoming.append(content);
+          if (
+            regions.has(target as HTMLElement) &&
+            (incoming.tagName !== target.tagName || incoming.id !== target.id)
+          )
+            throw new Error('Region morph must preserve its tag and id');
+          capture(target.parentElement, false);
+          morphdom(target, incoming, {
+            onBeforeNodeDiscarded: (node) => {
+              if (touchesProtected(node)) throw new Error('Cannot discard Solid-owned subtree');
+              return true;
+            },
+            onBeforeElUpdated: (oldEl, newEl) => {
+              if (oldEl.hasAttribute('data-ignore-morph')) return false;
+              capture(oldEl, true);
+              if (
+                oldEl === document.activeElement &&
+                oldEl instanceof HTMLInputElement &&
+                newEl instanceof HTMLInputElement
+              ) {
+                newEl.value = oldEl.value;
+                newEl.checked = oldEl.checked;
+              }
+              if (
+                oldEl === document.activeElement &&
+                oldEl instanceof HTMLSelectElement &&
+                newEl instanceof HTMLSelectElement
+              )
+                newEl.value = oldEl.value;
+              if (
+                oldEl === document.activeElement &&
+                oldEl instanceof HTMLTextAreaElement &&
+                newEl instanceof HTMLTextAreaElement
+              )
+                newEl.value = oldEl.value;
+              return true;
+            },
+          });
+        } else {
+          capture(['append', 'prepend'].includes(mode) ? target : target.parentElement, false);
+          if (mode === 'replace') target.replaceWith(content);
+          else if (mode === 'append') target.append(content);
+          else if (mode === 'prepend') target.prepend(content);
+          else if (mode === 'before') target.before(content);
+          else if (mode === 'after') target.after(content);
+        }
         if (
-          selection &&
-          selection[0] !== null &&
-          selection[1] !== null &&
-          (focused instanceof HTMLInputElement || focused instanceof HTMLTextAreaElement)
-        )
-          focused.setSelectionRange(selection[0], selection[1], selection[2] ?? undefined);
+          focused?.isConnected &&
+          focusValue !== undefined &&
+          (focused instanceof HTMLInputElement ||
+            focused instanceof HTMLTextAreaElement ||
+            focused instanceof HTMLSelectElement)
+        ) {
+          focused.value = focusValue;
+          if (
+            selection &&
+            selection[0] !== null &&
+            selection[1] !== null &&
+            (focused instanceof HTMLInputElement || focused instanceof HTMLTextAreaElement)
+          )
+            focused.setSelectionRange(selection[0], selection[1], selection[2] ?? undefined);
+        }
+      }
+    } finally {
+      // A later target can reject after earlier targets have already changed.
+      try {
+        scan();
+      } finally {
+        for (const [el, { entry, childrenOnly }] of affected)
+          if (bindings.get(el) === entry && el.isConnected && inside(el))
+            entry.refresh(childrenOnly);
       }
     }
-    scan();
-    setRevision((n) => n + 1);
   }
   async function request(el: Element, url: string) {
     requests.get(el)?.abort();

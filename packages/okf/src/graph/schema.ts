@@ -56,23 +56,38 @@ const migrations = [
 ];
 
 export function assertSchema(db: WasmDatabase): void {
-  if (db.prepare('PRAGMA application_id').get()!.application_id !== APPLICATION_ID) throw new Error('Not an OKF graph index');
+  if (db.prepare('PRAGMA application_id').get()!.application_id !== APPLICATION_ID)
+    throw new Error('Not an OKF graph index');
   const version = Number(db.prepare('PRAGMA user_version').get()!.user_version);
-  if (version !== SCHEMA_VERSION) throw new Error(`Unsupported graph schema ${version}; rebuild with this compiler (schema ${SCHEMA_VERSION})`);
+  if (version !== SCHEMA_VERSION)
+    throw new Error(
+      `Unsupported graph schema ${version}; rebuild with this compiler (schema ${SCHEMA_VERSION})`,
+    );
 }
 export function migrate(db: WasmDatabase, target = SCHEMA_VERSION): void {
   const version = Number(db.prepare('PRAGMA user_version').get()!.user_version);
   const application = Number(db.prepare('PRAGMA application_id').get()!.application_id);
   if (version > SCHEMA_VERSION) throw new Error('Database schema is newer than this compiler');
-  if (target < version || target > SCHEMA_VERSION || target < 1) throw new Error('Invalid migration target');
-  if (application !== APPLICATION_ID && (application !== 0 || db.prepare("SELECT name FROM sqlite_master WHERE type='table'").get())) throw new Error('Refusing to overwrite a non-OKF database');
+  if (target < version || target > SCHEMA_VERSION || target < 1)
+    throw new Error('Invalid migration target');
+  if (
+    application !== APPLICATION_ID &&
+    (application !== 0 || db.prepare("SELECT name FROM sqlite_master WHERE type='table'").get())
+  )
+    throw new Error('Refusing to overwrite a non-OKF database');
   db.exec('PRAGMA foreign_keys = ON; BEGIN IMMEDIATE');
   try {
     for (let next = version + 1; next <= target; next++) {
       db.exec(migrations[next - 1]!);
-      db.prepare('INSERT INTO migrations VALUES (?, ?)').run(next, next === 1 ? 'normalized_graph' : next === 2 ? 'full_text_search' : 'okf_metadata_paths');
+      db.prepare('INSERT INTO migrations VALUES (?, ?)').run(
+        next,
+        next === 1 ? 'normalized_graph' : next === 2 ? 'full_text_search' : 'okf_metadata_paths',
+      );
       db.exec(`PRAGMA user_version = ${next}`);
     }
     db.exec(`PRAGMA application_id = ${APPLICATION_ID}; COMMIT`);
-  } catch (error) { db.exec('ROLLBACK'); throw error; }
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
 }

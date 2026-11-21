@@ -5,8 +5,5 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true
   },
-  "include": [
-    "src/types.ts",
-    "src/site/ownership.ts"
-  ]
+  "include": ["src/types.ts", "src/site/ownership.ts"]
 }

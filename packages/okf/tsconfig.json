@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "lib": [
-      "ES2023"
-    ],
+    "lib": ["ES2023"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "strict": true,
@@ -14,12 +12,8 @@
     "outDir": "dist",
     "rootDir": "src",
     "rewriteRelativeImportExtensions": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "skipLibCheck": true
   },
-  "include": [
-    "src/**/*"
-  ]
+  "include": ["src/**/*"]
 }

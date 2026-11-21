@@ -1,7 +1,9 @@
 @import '@astrokjs/theme/fonts.css';
 @import '@astrokjs/theme/starlight.css';
 
-:root { --sl-content-width: 48rem; }
+:root {
+  --sl-content-width: 48rem;
+}
 
 .sl-markdown-content pre:focus-visible {
   outline: 2px solid var(--focus-ring);
