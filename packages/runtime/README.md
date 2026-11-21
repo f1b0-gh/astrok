@@ -171,10 +171,8 @@ removes bindings, effects, observers and outstanding requests. Factories created
 inside a Solid owner also register owner cleanup; explicit cleanup remains useful
 for application navigation.
 
-Source attribution: state/SSE and hypermedia derive from soc-proto's
-`apps/web/src/shared-signals.ts` and `apps/web/src/hypermedia.ts`; request generation
-ownership derives from ECSpect's `site/analytics/src/selection.mjs`. No sibling
-repository is needed to build or use this package. See [Building and testing](../../BUILDING.md) for the current verification commands.
+This package is self-contained; historical source attribution is in [NOTICE](NOTICE).
+See [Building and testing](../../BUILDING.md) for the verification commands.
 
 Build with `npm run build --workspace=@astrokjs/runtime`. Declarations and executable
 ESM are emitted to `dist/`; the maintained assets are `src/`, tests and manifests.

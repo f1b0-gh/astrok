@@ -1,0 +1,9 @@
+Astrok runtime source attribution
+
+State, SSE and hypermedia originated in soc-proto's
+apps/web/src/shared-signals.ts and apps/web/src/hypermedia.ts.
+Request-generation ownership originated in ECSpect's
+site/analytics/src/selection.mjs.
+
+These names record historical provenance, not build dependencies or required
+checkouts. This package is self-contained and retains its MIT license.

@@ -1,4 +1,4 @@
-/** Datastar-compatible subset adapted from soc-proto/apps/web/src/shared-signals.ts. */
+/** Datastar-compatible patch transport. */
 import { validatePatch } from './state.js';
 import type { SignalPatch } from './state.js';
 
@@ -122,10 +122,40 @@ export async function readPatches(
   signal.addEventListener('abort', abort, { once: true });
   let event = '';
   let data: string[] = [];
-  let lineBytes: number[] = [];
+  let lineBytes = new Uint8Array(0);
+  let lineLength = 0;
   let eventBytes = 0;
   let pendingCR = false;
   const decoder = new TextDecoder('utf-8', { fatal: true });
+  function countBytes(count: number): void {
+    eventBytes += count;
+    if (eventBytes > limit) throw new Error('Patch event byte limit exceeded');
+  }
+  function appendLine(bytes: Uint8Array): void {
+    const length = lineLength + bytes.byteLength;
+    if (length > lineBytes.byteLength) {
+      // Geometric growth bounds total copying for even one-byte chunks. The
+      // event budget is checked before appending and also caps capacity.
+      const capacity = Math.min(limit, Math.max(length, lineBytes.byteLength * 2, 1024));
+      const next = new Uint8Array(capacity);
+      next.set(lineBytes.subarray(0, lineLength));
+      lineBytes = next;
+    }
+    lineBytes.set(bytes, lineLength);
+    lineLength = length;
+  }
+  function finishLine(tail: Uint8Array): void {
+    let text: string;
+    if (lineLength) {
+      appendLine(tail);
+      text = decoder.decode(lineBytes.subarray(0, lineLength));
+      lineLength = 0;
+    } else {
+      // Complete lines within a chunk can be decoded without an extra copy.
+      text = decoder.decode(tail);
+    }
+    line(text);
+  }
   function line(text: string): void {
     if (!text) {
       if (event === 'datastar-patch-signals') {
@@ -168,32 +198,52 @@ export async function readPatches(
     while (!signal.aborted) {
       const { value, done } = await reader.read();
       if (done || signal.aborted) break;
-      for (const byte of value) {
-        if (signal.aborted) break;
-        if (pendingCR) {
-          pendingCR = false;
-          if (byte === 10) {
-            if (++eventBytes > limit) throw new Error('Patch event byte limit exceeded');
-            line(decoder.decode(new Uint8Array(lineBytes)));
-            lineBytes = [];
-            continue;
-          }
-          line(decoder.decode(new Uint8Array(lineBytes)));
-          lineBytes = [];
+      if (!value.byteLength) continue;
+      let offset = 0;
+      if (pendingCR) {
+        pendingCR = false;
+        if (value[0] === 10) {
+          countBytes(1);
+          offset = 1;
         }
-        if (++eventBytes > limit) throw new Error('Patch event byte limit exceeded');
-        if (byte === 13) pendingCR = true;
-        else if (byte === 10) {
-          line(decoder.decode(new Uint8Array(lineBytes)));
-          lineBytes = [];
-        } else lineBytes.push(byte);
+        finishLine(value.subarray(0, 0));
+        if (signal.aborted) break;
+      }
+      // Cache both searches: repeating an absent CR search after every LF
+      // would rescan the remaining chunk and make many short lines quadratic.
+      let cr = value.indexOf(13, offset);
+      let lf = value.indexOf(10, offset);
+      while (offset < value.byteLength && !signal.aborted) {
+        const end = cr < 0 ? lf : lf < 0 ? cr : Math.min(cr, lf);
+        if (end < 0) {
+          countBytes(value.byteLength - offset);
+          appendLine(value.subarray(offset));
+          break;
+        }
+        countBytes(end - offset + 1);
+        const tail = value.subarray(offset, end);
+        offset = end + 1;
+        if (end === cr) {
+          if (offset === value.byteLength) {
+            appendLine(tail);
+            pendingCR = true;
+            break;
+          }
+          if (value[offset] === 10) {
+            countBytes(1);
+            offset++;
+          }
+        }
+        finishLine(tail);
+        if (signal.aborted) break;
+        if (cr >= 0 && cr < offset) cr = value.indexOf(13, offset);
+        if (lf >= 0 && lf < offset) lf = value.indexOf(10, offset);
       }
     }
     if (!signal.aborted && pendingCR) {
-      line(decoder.decode(new Uint8Array(lineBytes)));
-      lineBytes = [];
+      finishLine(lineBytes.subarray(0, 0));
     }
-    if (!signal.aborted && (lineBytes.length || event || data.length))
+    if (!signal.aborted && (lineLength || event || data.length))
       throw new Error('Incomplete patch event stream');
   } finally {
     signal.removeEventListener('abort', abort);

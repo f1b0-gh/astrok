@@ -58,6 +58,12 @@ are tested with an enforced `script-src 'self'` policy, without `unsafe-eval` or
 `unsafe-inline`. CSP configuration for other Astro features remains the site's
 responsibility. Render-only mutations do not rescan the region.
 
+HTML patches are not atomic: a later target may fail after earlier mutations.
+Binding cleanup and refresh therefore run even when patching throws. Refreshes
+are local to affected elements; unrelated regions keep their existing reactive
+subscriptions. Normal state changes still notify all bindings that depend on
+the changed values.
+
 `createSharedState` validates the complete candidate and decoder output before
 committing, including cross-field invariants and schema transformations. This
 remains proportional to total state size. `createFieldState` is an explicit

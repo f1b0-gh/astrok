@@ -1,4 +1,4 @@
-/** Adapted from soc-proto/apps/web/src/shared-signals.ts (native Solid 2 draft store). */
+/** Shared state backed by a native Solid 2 draft store. */
 import { createRoot, createStore, getOwner, onCleanup, reconcile, snapshot } from 'solid-js';
 export type SignalPatch = Record<string, unknown>;
 export const DEFAULT_MAX_DEPTH = 64;
