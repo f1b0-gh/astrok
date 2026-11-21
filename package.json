@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Astro, Solid 2 and OKF framework with optional trusted hypermedia",
   "scripts": {
-    "validate:okf": "npm run build --workspace @astrok/okf && node scripts/validate-okf.mjs knowledge && node scripts/validate-okf.mjs examples/graph/knowledge",
+    "validate:okf": "npm run build --workspace @astrok/okf && node scripts/validate-okf.mjs knowledge --strict && node scripts/validate-okf.mjs examples/graph/knowledge --strict && node scripts/validate-okf.mjs examples/workspace/knowledge --strict",
     "dev": "npm run build:packages && npm run dev --workspace @astrok/example-workspace",
     "build": "npm run build:example",
     "preview": "npm run preview --workspace @astrok/example-workspace",
@@ -24,7 +24,7 @@
     "build:example": "npm run build:packages && npm run build --workspace @astrok/example-workspace",
     "test:runtime": "npm run test --workspace @astrok/runtime",
     "verify:packages": "node scripts/verify-astrok-packages.mjs",
-    "verify:astrok": "npm run build:packages && npm run validate:okf && node scripts/validate-okf.mjs examples/workspace/knowledge && npm run test:runtime && node --test tests/packages.test.mjs && npm run check --workspace @astrok/example-workspace && npm run build --workspace @astrok/example-workspace && npm run test:browser && npm run verify:packages",
+    "verify:astrok": "npm run build:packages && npm run validate:okf && npm run test:runtime && node --test tests/packages.test.mjs && npm run check --workspace @astrok/example-workspace && npm run build --workspace @astrok/example-workspace && npm run test:browser && npm run verify:packages",
     "dev:docs": "npm run build:packages && astro dev",
     "build:docs": "npm run build:packages && astro build",
     "preview:docs": "astro preview",

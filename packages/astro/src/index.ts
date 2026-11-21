@@ -10,7 +10,7 @@ export const okfOptionsSchema = z.strictObject({
   docsDir: z.string().min(1).optional(),
   publicDir: z.string().min(1).optional(),
   base: z.string().refine(value => { try { normalizeBase(value); return true; } catch { return false; } }, 'Expected an absolute URL path without traversal').optional(),
-  graph: z.boolean().default(true),
+  graph: z.boolean().default(false),
   sqlite: z.boolean().optional(),
   presentation: z.enum(['plain', 'starlight']).default('starlight'),
 });
@@ -50,7 +50,7 @@ export function okfIntegration(options: OkfOptions = {}): AstroIntegration {
           if (parsed.graph) {
             await assertOwnedDirectory(root, path.join(publicDir, 'graph'), true);
             const { publishIndex } = await import('@astrok/okf/graph');
-            await publishIndex({ root, publicDir, bundle, sqlite: parsed.sqlite ?? process.env.OKF_SQLITE !== '0', base });
+            await publishIndex({ root, publicDir, bundle, sqlite: parsed.sqlite ?? process.env.OKF_SQLITE === '1', base });
           }
           for (const warning of bundle.warnings) logger.warn(warning);
           logger.info(`Generated ${bundle.documents.length} OKF documents.`);

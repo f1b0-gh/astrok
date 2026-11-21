@@ -34,7 +34,9 @@ Source generation only owns fresh/empty or previously marked directories.
 owned. Preserve `.astrok-owned.json` between generations. The public package does not claim arbitrary populated directories; legacy
 unmarked output must be rebuilt in fresh generated directories.
 
-`graph` defaults to true; `sqlite` defaults to the `OKF_SQLITE !== '0'` policy.
+`graph` defaults to false. Set `graph: true` for JSON publication. SQLite is
+also opt-in: set `sqlite: true` or `OKF_SQLITE=1` with graph enabled; an explicit
+`sqlite: false` overrides the environment.
 Setting `graph: false` skips graph publication. Explicitly choose fresh output
 paths when changing publication policy; no broad caller-directory cleanup occurs.
 

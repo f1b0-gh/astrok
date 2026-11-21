@@ -103,7 +103,7 @@ test('JSON publication and default CLI work with SQLite imports forbidden and re
   const exec = promisify(execFile);
   const { root } = await fixture(t, { 'a.md': doc('thing', 'graph_relations:\n  - {target: b.md, relation: resembles, family: similar}\n'), 'b.md': doc('concept') });
   const publicDir = path.join(path.dirname(root), 'public');
-  const block = 'data:text/javascript,' + encodeURIComponent(`import { registerHooks } from 'node:module'; registerHooks({resolve(specifier, context, next) { if (specifier.includes('sqlite-wasm') || specifier.endsWith('/wasm.ts')) throw new Error('SQLITE_FORBIDDEN'); return next(specifier, context); }});`);
+  const block = 'data:text/javascript,' + encodeURIComponent(`import { registerHooks } from 'node:module'; registerHooks({resolve(specifier, context, next) { if (specifier.includes('sqlite-wasm') || specifier.endsWith('/wasm.ts') || specifier.endsWith('/wasm.js')) throw new Error('SQLITE_FORBIDDEN'); return next(specifier, context); }});`);
   const cli = (...args: string[]) => exec(process.execPath, ['--import', block, 'scripts/graph.ts', ...args]);
   const built = JSON.parse((await cli('build', '--no-sqlite', '--root', root, '--public-dir', publicDir)).stdout);
   assert.equal(built.runtime.engine, 'okf-memory');
@@ -135,7 +135,7 @@ test('JSON publication and default CLI work with SQLite imports forbidden and re
   await assert.rejects(cli('build', '--no-sqlite', '--root', root, '--public-dir', root), /outside/);
 });
 
-test('automatic SQLite and JSON publication consume the exact same parsed OKF snapshot', async t => {
+test('opt-in SQLite and JSON publication consume the exact same parsed OKF snapshot', async t => {
   const { publishIndex } = await import('@astrok/okf/graph');
   const { KnowledgeGraph } = await import('@astrok/okf/graph');
   const { root } = await fixture(t, { 'a.md': doc('event', relations), 'b.md': doc('thing'), 'c.md': doc('concept') });
@@ -143,7 +143,7 @@ test('automatic SQLite and JSON publication consume the exact same parsed OKF sn
   // A subsequent disk edit must not leak into just one output of this publication.
   await writeFile(path.join(root, 'a.md'), doc('concept').replace('Searchable café token.', 'Newer disk version.'));
   const publicDir = path.join(path.dirname(root), 'public');
-  await publishIndex({ root, publicDir, bundle });
+  await publishIndex({ root, publicDir, bundle, sqlite: true });
   const memory = KnowledgeGraph.fromJSON(JSON.parse(await readFile(path.join(publicDir, 'graph/graph.json'), 'utf8')));
   const sql = await SqliteKnowledgeIndex.open(path.join(publicDir, 'graph/knowledge.sqlite'));
   try {
@@ -167,7 +167,7 @@ test('failed publication preserves the previous JSON and SQLite generation', asy
   const { publishIndex } = await import('@astrok/okf/graph');
   const { root } = await fixture(t, { 'a.md': doc('thing') });
   const publicDir = path.join(path.dirname(root), 'public');
-  await publishIndex({ root, publicDir });
+  await publishIndex({ root, publicDir, sqlite: true });
   const database = path.join(publicDir, 'graph/knowledge.sqlite');
   const json = path.join(publicDir, 'graph/graph.json');
   const oldDatabase = await readFile(database), oldJSON = await readFile(json);
@@ -175,7 +175,7 @@ test('failed publication preserves the previous JSON and SQLite generation', asy
   await rm(blocked);
   await mkdir(blocked);
   await writeFile(path.join(root, 'a.md'), doc('event'));
-  await assert.rejects(publishIndex({ root, publicDir }), /EISDIR|directory/);
+  await assert.rejects(publishIndex({ root, publicDir, sqlite: true }), /EISDIR|directory/);
   assert.deepEqual(await readFile(database), oldDatabase);
   assert.deepEqual(await readFile(json), oldJSON);
 });
@@ -194,15 +194,18 @@ test('memory and SQLite match underscore-separated words consistently', async t 
   } finally { sql.close(); }
 });
 
-test('CLI honors environment SQL opt-out without importing SQLite', async t => {
+test('CLI defaults to SQL-free publication and honors explicit opt-in and opt-out', async t => {
   const { promisify } = await import('node:util');
   const { execFile } = await import('node:child_process');
   const exec = promisify(execFile);
   const { root } = await fixture(t, { 'a.md': doc('thing') });
-  const block = 'data:text/javascript,' + encodeURIComponent(`import { registerHooks } from 'node:module'; registerHooks({resolve(s,c,n) { if (s.includes('sqlite-wasm') || s.endsWith('/wasm.ts')) throw new Error('SQLITE_FORBIDDEN'); return n(s,c); }});`);
+  const block = 'data:text/javascript,' + encodeURIComponent(`import { registerHooks } from 'node:module'; registerHooks({resolve(s,c,n) { if (s.includes('sqlite-wasm') || s.endsWith('/wasm.ts') || s.endsWith('/wasm.js')) throw new Error('SQLITE_FORBIDDEN'); return n(s,c); }});`);
   const publicDir = path.join(path.dirname(root), 'public');
   const args = ['--import', block, 'scripts/graph.ts', 'build', '--root', root, '--public-dir', publicDir];
-  const result = await exec(process.execPath, args, { env: { ...process.env, OKF_SQLITE: '0' } });
+  const env = {...process.env}; delete env.OKF_SQLITE;
+  const result = await exec(process.execPath, args, { env });
+  await assert.rejects(exec(process.execPath, args, {env: {...env, OKF_SQLITE: '1'}}), /SQLITE_FORBIDDEN/);
+  await exec(process.execPath, [...args, '--no-sqlite'], {env: {...env, OKF_SQLITE: '1'}});
   assert.equal(JSON.parse(result.stdout).runtime.engine, 'okf-memory');
   await assert.rejects(readFile(path.join(publicDir, 'graph/knowledge.sqlite')), /ENOENT/);
   // Explicit --sqlite takes precedence over the environment.

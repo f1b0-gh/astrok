@@ -9,7 +9,7 @@ export default defineConfig({
   trailingSlash: 'always',
   publicDir: './.generated/public',
   integrations: [
-    okfIntegration(),
+    okfIntegration({ graph: true }),
     {
       name: 'astrok-example-icon',
       hooks: {

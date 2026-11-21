@@ -35,7 +35,7 @@ test('clean installation builds canonical routes and refreshes source edits in d
     '_topic.md': '---\ntype: Future Kind\n---\nUnderscore concept.\n',
   };
   for (const [file, text] of Object.entries(files)) await writeFile(path.join(root, 'knowledge', file), text);
-  await exec(process.execPath, [path.join(root, 'node_modules/astro/bin/astro.mjs'), 'build'], { cwd: root, timeout: 60000, env: { ...process.env, OKF_SQLITE: '0' } });
+  await exec(process.execPath, [path.join(root, 'node_modules/astro/bin/astro.mjs'), 'build'], { cwd: root, timeout: 60000 });
   const manifest = JSON.parse(await readFile(path.join(root, 'dist/okf/manifest.json'), 'utf8'));
   for (const document of manifest.documents) {
     const destination = path.join(root, 'dist', decodeURIComponent(document.url), 'index.html');
@@ -47,7 +47,7 @@ test('clean installation builds canonical routes and refreshes source edits in d
   assert.match(nested, /href="\/Guide%20One\/#a-heading"/);
 
   let output = '';
-  server = spawn(process.execPath, [path.join(root, 'node_modules/astro/bin/astro.mjs'), 'dev', '--host', '127.0.0.1', '--port', '0', '--ignore-lock'], { cwd: root, env: { ...process.env, OKF_SQLITE: '0' }, stdio: ['ignore', 'pipe', 'pipe'] });
+  server = spawn(process.execPath, [path.join(root, 'node_modules/astro/bin/astro.mjs'), 'dev', '--host', '127.0.0.1', '--port', '0', '--ignore-lock'], { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] });
   server.stdout.on('data', chunk => { output += chunk; });
   server.stderr.on('data', chunk => { output += chunk; });
   async function eventually(check) {
