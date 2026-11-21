@@ -1,7 +1,7 @@
 # @astrokjs/runtime
 
-Native Solid 2 shared state, request ownership, and bounded patch transport. Version 0.1.0 accepts
-`solid-js` and `@solidjs/web` ^2.0.0; the workspace example pins and tests both at 2.0.0.
+Native Solid 2 shared state, request ownership, and bounded patch transport. Version 0.1.0-beta.1
+accepts `solid-js` and `@solidjs/web` ^2.0.0; the workspace example pins and tests both at 2.0.0.
 
 ```ts
 import { createSharedState, createLatestRequest, readPatches } from '@astrokjs/runtime';

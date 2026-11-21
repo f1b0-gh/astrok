@@ -62,8 +62,8 @@ with your local paths:
 ASTROK_PACKAGES=/absolute/path/to/astrok/artifacts/local
 cd /absolute/path/to/your-astro-project
 npm install astro@7.4.13 @astrojs/markdown-remark@7.3.9 \
-  "$ASTROK_PACKAGES/astrokjs-okf-0.1.0.tgz" \
-  "$ASTROK_PACKAGES/astrokjs-astro-0.1.0.tgz"
+  "$ASTROK_PACKAGES/astrokjs-okf-0.1.0-beta.1.tgz" \
+  "$ASTROK_PACKAGES/astrokjs-astro-0.1.0-beta.1.tgz"
 ```
 
 Install both together to resolve the internal dependency locally. The setup below uses plain Astro.

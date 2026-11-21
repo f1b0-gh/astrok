@@ -1,6 +1,6 @@
 {
   "name": "@astrokjs/okf",
-  "version": "0.1.0",
+  "version": "0.1.0-beta.1",
   "type": "module",
   "description": "Canonical OKF parsing, static publication and optional knowledge graph",
   "files": [

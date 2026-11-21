@@ -1,6 +1,6 @@
 {
   "name": "@astrokjs/astro",
-  "version": "0.1.0",
+  "version": "0.1.0-beta.1",
   "type": "module",
   "description": "Configurable OKF publication for Astro with optional Starlight presentation",
   "files": [
@@ -38,7 +38,7 @@
     "check": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@astrokjs/okf": "0.1.0",
+    "@astrokjs/okf": "0.1.0-beta.1",
     "magic-string": "1.4.5",
     "zod": "4.6.7"
   },

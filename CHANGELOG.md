@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.1.0-beta.1 — 2026-11-21
+
+Prepared for the first npm prerelease under the `next` tag.
+
 - Accept compatible Astro `^7.4.13` and Starlight `^0.43.1` peer updates while keeping exact
   versions in the workspace.
 - Recover hypermedia bindings after partially applied patches and refresh only affected bindings.
