@@ -33,3 +33,12 @@ Follow `BUILDING.md`; run checks covering the change and add regression tests fo
 route or runtime behavior. Run `npm run validate:okf` after knowledge or validator changes.
 `npm run verify` runs the full suite. Record commands and outcomes in ignored `harness/build-log.md`
 (create the directory if needed), and state explicitly which required checks could not run.
+
+## Shared skills
+
+Use [skills-dev](https://github.com/f1b0-gh/skills-dev) for relevant work:
+`skills/rust-discipline/SKILL.md` for Rust policy, `skills/rust-skills/` for
+selected Rust references, and `skills/clickhouse-sql/SKILL.md` for ClickHouse.
+Read these in the shared repository or an installed copy; project contracts,
+dependency constraints and validation commands take precedence over examples.
+Keep maintained instructions and documentation in English.
